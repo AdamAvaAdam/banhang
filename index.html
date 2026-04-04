@@ -3,24 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kho Việt Tuấn - Fix Lỗi Giọng Nói</title>
+    <title>Kho Việt Tuấn - Chế độ Lái xe</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; padding: 10px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .search-area { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 100; border-bottom: 2px solid #3498db; }
-        .search-box { display: flex; gap: 5px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
-        .btn-voice { background: #e74c3c; color: white; flex: 0 0 100px; }
-        .btn-voice.recording { background: #c0392b; animation: pulse 1s infinite; }
-        .table-wrapper { overflow-x: auto; max-height: 75vh; margin-top: 10px; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #1a5f7a; color: white; padding: 10px; position: sticky; top: 0; text-align: left; font-size: 14px; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .stock-low { color: #d63031; font-weight: bold; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        :root { --primary: #1a5f7a; --danger: #d63031; --success: #27ae60; --warning: #f39c12; }
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #121212; color: #eee; padding: 10px; }
+        
+        .container { max-width: 800px; margin: auto; }
+        
+        /* Khu vực tìm kiếm cố định cực lớn */
+        .search-area { position: sticky; top: 0; background: #121212; padding: 15px 0; z-index: 1000; }
+        .search-box { display: flex; gap: 10px; height: 70px; }
+        input { flex: 1; background: #222; border: 2px solid #444; border-radius: 12px; color: #fff; padding: 0 20px; font-size: 24px; font-weight: bold; outline: none; }
+        input:focus { border-color: var(--warning); }
+        
+        .btn-voice { background: var(--danger); color: white; width: 120px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn-voice.recording { animation: blink 0.8s infinite; background: #ff7675; }
+
+        /* Danh sách dạng Thẻ (Card) để dễ nhìn khi rung lắc */
+        .item-list { margin-top: 10px; }
+        .card { background: #1e1e1e; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 8px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        
+        .row-1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .product-name { font-size: 26px; font-weight: 800; color: #74b9ff; flex: 1; padding-right: 10px; line-height: 1.2; }
+        .stock-tag { font-size: 30px; font-weight: 900; padding: 5px 15px; border-radius: 10px; background: #333; min-width: 60px; text-align: center; }
+        .out-of-stock { background: var(--danger) !important; color: white; }
+        
+        .row-2 { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #333; padding-top: 10px; }
+        .price { font-size: 28px; font-weight: bold; color: var(--warning); }
+        .program { font-size: 18px; color: var(--success); font-style: italic; font-weight: 500; }
+        .sku { font-size: 14px; color: #888; margin-bottom: 5px; display: block; }
+
+        #status { font-size: 14px; color: #666; margin-top: 8px; text-align: center; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -28,26 +44,14 @@
 <div class="container">
     <div class="search-area">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Tìm mã sp..." onkeyup="searchData()">
-            <button class="btn-voice" id="voiceBtn" onclick="startVoice()">🎤 GIỌNG NÓI</button>
+            <input type="text" id="searchInput" placeholder="Mã sp..." onkeyup="searchData()" autocomplete="off">
+            <button class="btn-voice" id="voiceBtn" onclick="startVoice()">🎤 NÓI</button>
         </div>
-        <div id="status" style="font-size: 11px; margin-top: 5px;">Đang tải...</div>
+        <div id="status">Đang tải kho hàng...</div>
     </div>
 
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã SP</th>
-                    <th>Tên Hàng</th>
-                    <th>Tồn</th>
-                    <th>Giá</th>
-                    <th>Chương trình</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
+    <div id="itemList" class="item-list">
+        </div>
 </div>
 
 <script>
@@ -69,38 +73,53 @@
 
                 fuse = new Fuse(allData, {
                     keys: ['Mã sản phẩm', 'Mã hàng'],
-                    threshold: 0.3, // Giảm xuống một chút để chính xác hơn
+                    threshold: 0.3,
                     distance: 100
                 });
 
-                renderTable(allData);
-                document.getElementById('status').innerText = "✅ Đã tải xong dữ liệu.";
+                renderCards(allData);
+                document.getElementById('status').innerText = `✅ Sẵn sàng - ${allData.length} mã`;
             }
         });
     }
 
-    function renderTable(data) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        data.forEach(item => {
-            const tr = document.createElement('tr');
+    function renderCards(data) {
+        const list = document.getElementById('itemList');
+        list.innerHTML = '';
+        
+        // Chỉ hiện top 20 kết quả để tránh lag khi lái xe
+        const displayData = data.slice(0, 20);
+
+        displayData.forEach(item => {
             const ton = (item['Tồn'] || '0').toString().trim();
-            tr.innerHTML = `
-                <td><b>${item['Mã sản phẩm'] || ''}</b></td>
-                <td>${item['Mã hàng'] || ''}</td>
-                <td class="${parseInt(ton) <= 0 ? 'stock-low' : ''}">${ton}</td>
-                <td>${item['Giá'] || ''}</td>
-                <td style="color:green; font-size:12px">${item['Chương trình'] || ''}</td>
+            const isOut = (parseInt(ton) <= 0 || ton.toLowerCase() === 'hết');
+            const price = item['Giá'] || 'Liên hệ';
+            const name = item['Mã hàng'] || 'Không tên';
+            const sku = item['Mã sản phẩm'] || '';
+            const program = item['Chương trình'] || '';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <span class="sku">${sku}</span>
+                <div class="row-1">
+                    <div class="product-name">${name}</div>
+                    <div class="stock-tag ${isOut ? 'out-of-stock' : ''}">${ton}</div>
+                </div>
+                <div class="row-2">
+                    <div class="price">${price}</div>
+                    <div class="program">${program}</div>
+                </div>
             `;
-            tbody.appendChild(tr);
+            list.appendChild(card);
         });
     }
 
     function searchData() {
         const query = document.getElementById('searchInput').value;
-        if (!query) { renderTable(allData); return; }
+        if (!query) { renderCards(allData); return; }
         const results = fuse.search(query);
-        renderTable(results.map(r => r.item));
+        renderCards(results.map(r => r.item));
     }
 
     function startVoice() {
@@ -108,34 +127,21 @@
         recognition.lang = 'vi-VN';
         const btn = document.getElementById('voiceBtn');
 
-        recognition.onstart = () => { btn.classList.add('recording'); btn.innerText = "🔴 ĐANG NGHE"; };
+        recognition.onstart = () => { btn.classList.add('recording'); btn.innerText = "🛑 NGHE"; };
         
         recognition.onresult = (event) => {
-            let text = event.results[0][0].transcript.toLowerCase();
-            console.log("Gốc:", text);
-
-            // BỘ LỌC ĐẶC BIỆT CHO LỖI "KHÔNG" -> "0"
-            let processed = text
-                .replace(/không/g, '0')
-                .replace(/một/g, '1')
-                .replace(/hai/g, '2')
-                .replace(/ba/g, '3')
-                .replace(/bốn/g, '4')
-                .replace(/năm/g, '5')
-                .replace(/sáu/g, '6')
-                .replace(/bảy/g, '7')
-                .replace(/tám/g, '8')
-                .replace(/chín/g, '9')
-                .replace(/mờ/g, 'm')
-                .replace(/\./g, '')  // Xóa dấu chấm phân cách số
-                .replace(/\s+/g, '') // Xóa mọi khoảng trắng
-                .toUpperCase();
+            let text = event.results[0][0].transcript.toLowerCase()
+                .replace(/không/g, '0').replace(/một/g, '1').replace(/hai/g, '2')
+                .replace(/ba/g, '3').replace(/bốn/g, '4').replace(/năm/g, '5')
+                .replace(/sáu/g, '6').replace(/bảy/g, '7').replace(/tám/g, '8')
+                .replace(/chín/g, '9').replace(/mờ/g, 'm').replace(/\./g, '')
+                .replace(/\s+/g, '').toUpperCase();
 
             document.getElementById('searchInput').value = processed;
             searchData();
         };
 
-        recognition.onend = () => { btn.classList.remove('recording'); btn.innerText = "🎤 GIỌNG NÓI"; };
+        recognition.onend = () => { btn.classList.remove('recording'); btn.innerText = "🎤 NÓI"; };
         recognition.start();
     }
 
