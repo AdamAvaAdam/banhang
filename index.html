@@ -120,25 +120,41 @@
         renderTable(filtered);
     }
 
-    function startVoice() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return alert("Trình duyệt không hỗ trợ giọng nói.");
-        
-        const rec = new SpeechRecognition();
-        rec.lang = 'vi-VN';
-        const btn = document.getElementById('voiceBtn');
+   function startVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("Trình duyệt không hỗ trợ giọng nói.");
+    
+    const rec = new SpeechRecognition();
+    rec.lang = 'vi-VN';
+    const btn = document.getElementById('voiceBtn');
 
-        rec.onstart = () => { btn.classList.add('recording'); btn.innerText = "🔴 ĐANG NGHE..."; };
-        rec.onresult = (e) => {
-            document.getElementById('searchInput').value = e.results[0][0].transcript;
-            filterTable();
-        };
-        rec.onend = () => { btn.classList.remove('recording'); btn.innerText = "🎤 GIỌNG NÓI"; };
-        rec.start();
-    }
+    rec.onstart = () => { 
+        btn.classList.add('recording'); 
+        btn.innerText = "🔴 ĐANG NGHE..."; 
+    };
 
-    fetchData();
-</script>
+    rec.onresult = (e) => {
+        let transcript = e.results[0][0].transcript;
+        console.log("Gốc từ Google:", transcript); // Để bạn kiểm tra trong F12 nếu muốn
 
+        // --- BỘ LỌC THÔNG MINH ---
+        let processed = transcript
+            .toLowerCase()
+            .replace(/mờ/g, 'm')       // Chuyển "mờ" -> "m"
+            .replace(/\./g, '')        // Xóa dấu chấm (1.100 -> 1100)
+            .replace(/\s+/g, '')       // Xóa mọi khoảng trắng (m 1100 -> m1100)
+            .toUpperCase();            // Viết hoa (m1100 -> M1100)
+
+        document.getElementById('searchInput').value = processed;
+        filterTable();
+    };
+
+    rec.onend = () => { 
+        btn.classList.remove('recording'); 
+        btn.innerText = "🎤 GIỌNG NÓI"; 
+    };
+
+    rec.start();
+}
 </body>
 </html>
