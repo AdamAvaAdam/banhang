@@ -3,174 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Tra Cứu Kho & Giá - Việt Tuấn</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <title>Quản Lý Bán Hàng - Dũng</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        :root { --primary: #0056b3; --accent: #d93025; --bg: #f4f7f9; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 10px; }
-        .app-card { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; margin: 20px; background: #f4f7f6; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; }
         
-        /* Header & Upload */
-        .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .upload-box { background: #fff8f0; border: 2px dashed #ff9800; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 15px; }
-        .btn-select { background: #ff9800; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; display: inline-block; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 4px; transition: 0.3s; }
+        .btn-voice { background: #e74c3c; color: white; }
+        .btn-voice.recording { background: #c0392b; animation: pulse 1.5s infinite; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #2980b9; color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #f1f1f1; }
+        .stock-low { color: red; font-weight: bold; }
 
-        /* Search & Mic */
-        .search-row { display: flex; gap: 8px; position: sticky; top: 0; background: white; padding: 10px 0; z-index: 100; }
-        #searchInput { flex: 1; padding: 12px 20px; border: 2px solid var(--primary); border-radius: 30px; font-size: 16px; outline: none; }
-        .btn-mic { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 22px; cursor: pointer; transition: 0.3s; }
-        .listening { animation: pulse 1s infinite; background: #ff0000; box-shadow: 0 0 15px rgba(255,0,0,0.5); }
-
-        /* Bảng dữ liệu */
-        .table-res { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; background: white; min-width: 800px; }
-        th { background: #2c3e50; color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
-        tr:hover { background-color: #f9f9f9; }
-
-        /* Định dạng nội dung */
-        .makh { font-weight: bold; color: #2c3e50; }
-        .stock-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; }
-        .in-stock { background: #e8f5e9; color: #2e7d32; }
-        .out-stock { background: #ffebee; color: #c62828; }
-        .price { color: #e65100; font-weight: bold; font-size: 16px; white-space: nowrap; }
-        .note { font-size: 12px; color: #666; font-style: italic; max-width: 250px; }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <div class="header">
-        <h2 style="margin:0; color:#2c3e50;">TRA CỨU NHANH VIỆT TUẤN</h2>
+<div class="container">
+    <h2>DỮ LIỆU BÁN HÀNG TRỰC TUYẾN</h2>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Nhập tên sản phẩm hoặc mã..." onkeyup="filterTable()">
+        <button class="btn-voice" id="voiceBtn" onclick="startVoice()">🎤 Nói</button>
+        <button onclick="fetchData()" style="background: #27ae60; color: white;">🔄 Tải lại</button>
     </div>
 
-    <div class="upload-box" id="uploadArea">
-        <label class="btn-select"> CHỌN FILE EXCEL MỚI NHẤT <input type="file" id="fileInput" hidden> </label>
-        <div id="fileStatus" style="margin-top:8px; font-size:13px; color:#666;">Chưa nạp dữ liệu</div>
-    </div>
+    <div id="status" style="margin-bottom: 10px; font-size: 14px; color: #666;">Đang tải dữ liệu...</div>
 
-    <div class="search-row">
-        <input type="text" id="searchInput" placeholder="Nhập mã ngắn (VD: 35ZVMV)...">
-        <button class="btn-mic" id="micBtn" onclick="startVoice()">🎤</button>
-    </div>
-
-    <div class="table-res">
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã hàng</th>
-                    <th>Tên hàng</th>
-                    <th style="width:70px">Tồn</th>
-                    <th style="width:110px">Giá bán</th>
-                    <th>Ghi chú / Chương trình</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Vui lòng nạp file Excel để bắt đầu.</td></tr>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Mã SP</th>
+                <th>Tên Sản Phẩm</th>
+                <th>ĐVT</th>
+                <th>Tồn</th>
+                <th>Giá</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
             </tbody>
-        </table>
-    </div>
+    </table>
 </div>
 
 <script>
-    let masterData = [];
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=954048889&single=true&output=csv";
+    let allData = [];
 
-    // 1. ĐỌC FILE EXCEL
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        document.getElementById('fileStatus').innerText = "Đang đọc file: " + file.name;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
-            processExcel(json);
-        };
-        reader.readAsArrayBuffer(file);
-    });
-
-    // 2. XỬ LÝ DỮ LIỆU (Tự động dò cột)
-    function processExcel(rows) {
-        if (rows.length === 0) return;
-        
-        let map = { ma: -1, ten: -1, ton: -1, gia: -1, ct: -1 };
-        
-        // Dò tìm dòng tiêu đề
-        for (let i = 0; i < Math.min(10, rows.length); i++) {
-            rows[i].forEach((cell, idx) => {
-                const s = String(cell).toLowerCase();
-                if (s.includes("mã hàng") && map.ma === -1) map.ma = idx;
-                if (s.includes("tên hàng") && map.ten === -1) map.ten = idx;
-                if (s.includes("tồn") && map.ton === -1) map.ton = idx;
-                if (s.includes("giá") && map.gia === -1) map.gia = idx;
-                if (s.includes("chương trình") && map.ct === -1) map.ct = idx;
-            });
-            if (map.ma !== -1) break;
-        }
-
-        masterData = rows.slice(1).map(r => {
-            if (!r[map.ma]) return null;
-            let tonVal = String(r[map.ton] || "0").trim();
-            return {
-                ma: String(r[map.ma] || ""),
-                ten: String(r[map.ten] || ""),
-                ton: tonVal,
-                gia: isNaN(r[map.gia]) ? (r[map.gia] || "Liên hệ") : Number(r[map.gia]).toLocaleString('vi-VN'),
-                ct: String(r[map.ct] || "").replace(/#N\/A/g, "").trim()
-            };
-        }).filter(x => x !== null);
-
-        document.getElementById('fileStatus').innerHTML = `<b style="color:green">Đã nạp ${masterData.length} sản phẩm</b>`;
-        renderTable(masterData);
+    // 1. Lấy dữ liệu từ Google Sheets
+    function fetchData() {
+        document.getElementById('status').innerText = "Đang cập nhật dữ liệu...";
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                allData = results.data.filter(row => row['Mã sản phẩm']); // Lọc bỏ dòng trống
+                renderTable(allData);
+                document.getElementById('status').innerText = `Cập nhật lúc: ${new Date().toLocaleTimeString()} - Tổng số: ${allData.length} mã`;
+            }
+        });
     }
 
-    // 3. HIỂN THỊ
+    // 2. Hiển thị dữ liệu ra bảng
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = data.map(item => `
-            <tr>
-                <td class="makh">${item.ma}</td>
-                <td>${item.ten}</td>
-                <td><span class="stock-tag ${item.ton == '0' ? 'out-stock' : 'in-stock'}">${item.ton}</span></td>
-                <td class="price">${item.gia}</td>
-                <td class="note">${item.ct}</td>
-            </tr>
-        `).join('');
-    }
-
-    // 4. TÌM KIẾM THÔNG MINH
-    document.getElementById('searchInput').addEventListener('input', function(e) {
-        const query = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const filtered = masterData.filter(i => 
-            i.ma.toLowerCase().replace(/[^a-z0-9]/g, '').includes(query) || 
-            i.ten.toLowerCase().includes(query)
-        );
-        renderTable(filtered);
-    });
-
-    // 5. GIỌNG NÓI
-    function startVoice() {
-        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Speech) return alert("Trình duyệt không hỗ trợ giọng nói.");
+        tbody.innerHTML = '';
         
-        const rec = new Speech();
-        rec.lang = 'vi-VN';
-        const btn = document.getElementById('micBtn');
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            const ton = parseInt(item['Tồn']) || 0;
+            const tonClass = ton <= 0 ? 'stock-low' : '';
 
-        rec.onstart = () => btn.classList.add('listening');
-        rec.onend = () => btn.classList.remove('listening');
-        rec.onresult = (e) => {
-            const txt = e.results[0][0].transcript.replace(/\s/g, '');
-            document.getElementById('searchInput').value = txt;
-            document.getElementById('searchInput').dispatchEvent(new Event('input'));
-        };
-        rec.start();
+            row.innerHTML = `
+                <td><b>${item['Mã sản phẩm'] || ''}</b></td>
+                <td>${item['Tên sản phẩm'] || ''}</td>
+                <td>${item['ĐVT'] || ''}</td>
+                <td class="${tonClass}">${item['Tồn'] || 0}</td>
+                <td>${item['Giá'] || 'Liên hệ'}</td>
+            `;
+            tbody.appendChild(row);
+        });
     }
+
+    // 3. Bộ lọc tìm kiếm
+    function filterTable() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allData.filter(item => {
+            return (item['Mã sản phẩm'] || '').toLowerCase().includes(input) || 
+                   (item['Tên sản phẩm'] || '').toLowerCase().includes(input);
+        });
+        renderTable(filtered);
+    }
+
+    // 4. Tìm kiếm bằng giọng nói
+    function startVoice() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'vi-VN';
+        const btn = document.getElementById('voiceBtn');
+
+        recognition.onstart = () => {
+            btn.classList.add('recording');
+            btn.innerText = "🔴 Đang nghe...";
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('searchInput').value = transcript;
+            filterTable();
+        };
+
+        recognition.onend = () => {
+            btn.classList.remove('recording');
+            btn.innerText = "🎤 Nói";
+        };
+
+        recognition.start();
+    }
+
+    // Chạy lần đầu khi mở trang
+    fetchData();
 </script>
+
 </body>
 </html>
