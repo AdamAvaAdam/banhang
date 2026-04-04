@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho & Giá - Tự Động Khớp Cột</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root { --primary: #1a73e8; --success: #1e8e3e; --danger: #d93025; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f3f4; margin: 0; padding: 15px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .upload-section { border: 2px dashed #dadce0; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
+        .btn-upload { background: var(--primary); color: white; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 500; display: inline-block; }
+        .search-area { display: flex; gap: 10px; margin-bottom: 15px; position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; }
+        #searchInput { flex: 1; padding: 12px 20px; border: 1px solid #dadce0; border-radius: 24px; font-size: 16px; outline: none; }
+        .mic-btn { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--danger); color: white; font-size: 20px; cursor: pointer; }
+        .listening { animation: pulse 1s infinite; }
+        .table-container { overflow-x: auto; max-height: 70vh; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; color: #3c4043; position: sticky; top: 0; padding: 12px; border-bottom: 2px solid #ddd; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #f1f3f4; font-size: 14px; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .in-stock { background: #e6f4ea; color: #137333; }
+        .out-stock { background: #fce8e6; color: #c5221f; }
+        .price { color: #e67c73; font-weight: bold; font-size: 16px; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="upload-section" id="dropZone">
+        <label class="btn-upload"> CHỌN FILE EXCEL HÀNG NGÀY <input type="file" id="fileInput" hidden> </label>
+        <div id="status" style="margin-top: 10px; color: #666;">Chưa có dữ liệu. Hãy chọn file Excel.</div>
+    </div>
+
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="Đọc hoặc gõ mã ngắn (VD: 35ZVMV)...">
+        <button class="mic-btn" id="micBtn" onclick="startVoice()">🎤</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã hàng</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Tồn</th>
+                    <th>Giá</th>
+                    <th>Chương trình</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let dataStore = [];
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rawData = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            
+            processDataAuto(rawData);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function processDataAuto(rows) {
+        if (rows.length < 1) return;
+        
+        // BƯỚC 1: Tìm dòng tiêu đề và xác định chỉ số cột
+        let colIdx = { ma: -1, ten: -1, ton: -1, gia: -1, ct: -1 };
+        
+        // Duyệt 5 dòng đầu để tìm dòng tiêu đề (tránh trường hợp Excel có dòng trống ở trên)
+        for (let i = 0; i < Math.min(5, rows.length); i++) {
+            const row = rows[i];
+            row.forEach((cell, index) => {
+                const val = String(cell).toLowerCase();
+                if (val.includes("mã hàng")) colIdx.ma = index;
+                if (val.includes("tên hàng")) colIdx.ten = index;
+                if (val.includes("tồn")) colIdx.ton = index;
+                if (val.includes("giá")) colIdx.gia = index;
+                if (val.includes("chương trình")) colIdx.ct = index;
+            });
+            if (colIdx.ma !== -1) break; // Đã tìm thấy dòng tiêu đề
+        }
+
+        // BƯỚC 2: Chuyển đổi dữ liệu dựa trên cột đã tìm được
+        dataStore = rows.slice(1).map(row => {
+            if (!row[colIdx.ma]) return null;
+            return {
+                ma: String(row[colIdx.ma] || ""),
+                ten: String(row[colIdx.ten] || ""),
+                ton: String(row[colIdx.ton] || "0"),
+                gia: isNaN(row[colIdx.gia]) ? row[colIdx.gia] : Number(row[colIdx.gia]).toLocaleString('vi-VN'),
+                ct: String(row[colIdx.ct] || "").replace("#N/A", "")
+            };
+        }).filter(item => item !== null);
+
+        document.getElementById('status').innerText = "Đã nạp " + dataStore.length + " dòng. Sẵn sàng tìm kiếm!";
+        renderTable(dataStore);
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = data.map(item => `
+            <tr>
+                <td><strong>${item.ma}</strong></td>
+                <td>${item.ten}</td>
+                <td><span class="badge ${item.ton == '0' || item.ton == '' ? 'out-stock' : 'in-stock'}">${item.ton}</span></td>
+                <td class="price">${item.gia}</td>
+                <td style="color: #5f6368; font-style: italic;">${item.ct}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Tìm kiếm (Xóa bỏ ký tự đặc biệt để khớp mã ngắn)
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const filtered = dataStore.filter(i => 
+            i.ma.toLowerCase().replace(/[^a-z0-9]/g, '').includes(query) || 
+            i.ten.toLowerCase().includes(query)
+        );
+        renderTable(filtered);
+    });
+
+    function startVoice() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'vi-VN';
+        const btn = document.getElementById('micBtn');
+        recognition.onstart = () => btn.classList.add('listening');
+        recognition.onend = () => btn.classList.remove('listening');
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript.replace(/\s/g, '');
+            document.getElementById('searchInput').value = text;
+            document.getElementById('searchInput').dispatchEvent(new Event('input'));
+        };
+        recognition.start();
+    }
+</script>
+</body>
+</html>
