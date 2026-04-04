@@ -3,158 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kho Hàng Việt Tuấn - Dũng</title>
+    <title>Quản Lý Kho Việt Tuấn - Dũng</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #eef2f3; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h2 { color: #1a5f7a; text-align: center; text-transform: uppercase; margin-bottom: 25px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: #f0f2f5; padding: 15px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #1a5f7a; text-align: center; margin-bottom: 20px; text-transform: uppercase; }
         
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; position: sticky; top: 0; background: white; padding: 10px 0; z-index: 100; }
-        input { flex: 1; padding: 15px; border: 2px solid #3498db; border-radius: 8px; font-size: 16px; outline: none; }
-        button { padding: 10px 25px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        /* Thanh tìm kiếm */
+        .search-area { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 100; border-bottom: 2px solid #eee; margin-bottom: 15px; }
+        .search-box { display: flex; gap: 8px; }
+        input { flex: 1; padding: 15px; border: 2px solid #3498db; border-radius: 8px; font-size: 18px; outline: none; }
         
-        .btn-voice { background: #e74c3c; color: white; display: flex; align-items: center; gap: 5px; }
+        /* Nút bấm */
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; font-size: 14px; }
+        .btn-voice { background: #e74c3c; color: white; min-width: 120px; }
         .btn-voice.recording { background: #c0392b; animation: pulse 1s infinite; }
         .btn-reload { background: #27ae60; color: white; }
 
+        /* Bảng dữ liệu */
         .table-wrapper { overflow-x: auto; max-height: 70vh; border: 1px solid #ddd; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #1a5f7a; color: white; padding: 15px; position: sticky; top: 0; z-index: 10; text-align: left; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; color: #333; }
-        tr:hover { background: #f8fbff; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #1a5f7a; color: white; padding: 12px; position: sticky; top: 0; z-index: 10; text-align: left; font-size: 14px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 15px; color: #2c3e50; }
+        tr:hover { background: #f1f9ff; }
         
         .stock-low { color: #d63031; font-weight: bold; background: #fff5f5; }
-        .program-tag { color: #00b894; font-weight: 500; font-style: italic; }
-        #status { font-size: 13px; color: #636e72; margin-bottom: 10px; }
+        .promo { color: #00b894; font-weight: 500; font-size: 13px; }
+        #status { font-size: 13px; color: #7f8c8d; margin-top: 5px; }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Hệ Thống Tra Cứu Hàng Hóa</h2>
+    <h2>Hệ Thống Tra Cứu Kho Hàng</h2>
     
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Tìm tên hàng, mã sp hoặc chương trình..." onkeyup="filterTable()">
-        <button class="btn-voice" id="voiceBtn" onclick="startVoice()">🎤 GIỌNG NÓI</button>
-        <button class="btn-reload" onclick="fetchData()">🔄 TẢI LẠI</button>
+    <div class="search-area">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Đọc hoặc gõ mã sản phẩm, mã hàng..." onkeyup="filterTable()">
+            <button class="btn-voice" id="voiceBtn" onclick="startVoice()">🎤 GIỌNG NÓI</button>
+            <button class="btn-reload" onclick="fetchData()">🔄 TẢI LẠI</button>
+        </div>
+        <div id="status">Đang kiểm tra kết nối...</div>
     </div>
 
-    <div id="status">Đang kết nối dữ liệu...</div>
-
     <div class="table-wrapper">
-        <table>
+        <table id="mainTable">
             <thead>
                 <tr>
-                    <th width="15%">Mã SP</th>
-                    <th width="35%">Mã hàng (Tên)</th>
-                    <th width="8%">ĐVT</th>
-                    <th width="8%">Tồn</th>
-                    <th width="12%">Giá</th>
-                    <th width="22%">Chương trình</th>
+                    <th>Mã SP</th>
+                    <th>Mã Hàng (Tên)</th>
+                    <th>ĐVT</th>
+                    <th>Tồn</th>
+                    <th>Giá</th>
+                    <th>Chương trình</th>
                 </tr>
             </thead>
-            <tbody id="tableBody"></tbody>
+            <tbody id="tableBody">
+                </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=954048889&single=true&output=csv";
+    // Link CSV trực tiếp từ Google Sheets của bạn
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=954048889&single=true&output=csv";
+    
     let allData = [];
 
+    // 1. Hàm lấy dữ liệu
     function fetchData() {
-        document.getElementById('status').innerText = "Đang tải dữ liệu mới nhất...";
-        Papa.parse(csvUrl, {
+        const status = document.getElementById('status');
+        status.innerText = "⏳ Đang kết nối trang tính...";
+
+        Papa.parse(CSV_URL, {
             download: true,
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                // Xử lý làm sạch tiêu đề cột
-                allData = results.data.map(row => {
-                    let cleanedRow = {};
-                    Object.keys(row).forEach(key => {
-                        cleanedRow[key.trim().replace(/\s+/g, ' ')] = row[key];
-                    });
-                    return cleanedRow;
-                }).filter(row => row['Mã sản phẩm'] || row['Mã hàng']);
+                if (results.data && results.data.length > 0) {
+                    // Làm sạch tiêu đề cột (Xóa khoảng trắng, ký tự xuống dòng)
+                    allData = results.data.map(row => {
+                        let cleanRow = {};
+                        Object.keys(row).forEach(key => {
+                            let cleanKey = key.trim().replace(/\r?\n|\r/g, "");
+                            cleanRow[cleanKey] = row[key];
+                        });
+                        return cleanRow;
+                    }).filter(row => row['Mã sản phẩm'] || row['Mã hàng']);
 
-                renderTable(allData);
-                document.getElementById('status').innerText = `Cập nhật: ${new Date().toLocaleTimeString()} | Tổng cộng: ${allData.length} sản phẩm`;
+                    renderTable(allData);
+                    status.innerHTML = `<b style="color:green">✅ Đã kết nối.</b> Cập nhật: ${new Date().toLocaleTimeString()} | Tổng: ${allData.length} mã`;
+                } else {
+                    status.innerHTML = `<b style="color:red">❌ Không có dữ liệu trong file.</b>`;
+                }
+            },
+            error: function(err) {
+                status.innerHTML = `<b style="color:red">❌ Lỗi kết nối: ${err}. Hãy kiểm tra internet hoặc link Sheet.</b>`;
             }
         });
     }
 
+    // 2. Hàm hiển thị bảng
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         
         data.forEach(item => {
             const tr = document.createElement('tr');
-            
-            // Ép kiểu Tồn để kiểm tra màu sắc
-            const tonVal = item['Tồn'] ? item['Tồn'].toString().trim() : '0';
-            const isOut = (tonVal === '0' || tonVal === '-1' || tonVal.toLowerCase() === 'hết');
+            const ton = (item['Tồn'] || '0').toString().trim();
+            const isLow = (parseInt(ton) <= 0 || ton.toLowerCase() === 'hết');
 
             tr.innerHTML = `
                 <td><b>${item['Mã sản phẩm'] || ''}</b></td>
                 <td>${item['Mã hàng'] || ''}</td>
                 <td>${item['ĐVT'] || ''}</td>
-                <td class="${isOut ? 'stock-low' : ''}">${item['Tồn'] || 0}</td>
+                <td class="${isLow ? 'stock-low' : ''}">${ton}</td>
                 <td>${item['Giá'] || 'Liên hệ'}</td>
-                <td class="program-tag">${item['Chương trình'] || ''}</td>
+                <td class="promo">${item['Chương trình'] || ''}</td>
             `;
             tbody.appendChild(tr);
         });
     }
 
+    // 3. Hàm lọc tìm kiếm (gõ tay)
     function filterTable() {
-        const val = document.getElementById('searchInput').value.toLowerCase();
+        const query = document.getElementById('searchInput').value.toUpperCase();
         const filtered = allData.filter(i => {
-            return (i['Mã sản phẩm'] || '').toLowerCase().includes(val) || 
-                   (i['Mã hàng'] || '').toLowerCase().includes(val) ||
-                   (i['Chương trình'] || '').toLowerCase().includes(val);
+            return (i['Mã sản phẩm'] || '').toUpperCase().includes(query) || 
+                   (i['Mã hàng'] || '').toUpperCase().includes(query) ||
+                   (i['Chương trình'] || '').toUpperCase().includes(query);
         });
         renderTable(filtered);
     }
 
-   function startVoice() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Trình duyệt không hỗ trợ giọng nói.");
-    
-    const rec = new SpeechRecognition();
-    rec.lang = 'vi-VN';
-    const btn = document.getElementById('voiceBtn');
+    // 4. Tìm kiếm giọng nói (Xử lý thông minh "Mờ 1000" -> "M1000")
+    function startVoice() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return alert("Trình duyệt của bạn không hỗ trợ nhận diện giọng nói.");
 
-    rec.onstart = () => { 
-        btn.classList.add('recording'); 
-        btn.innerText = "🔴 ĐANG NGHE..."; 
-    };
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'vi-VN';
+        const btn = document.getElementById('voiceBtn');
 
-    rec.onresult = (e) => {
-        let transcript = e.results[0][0].transcript;
-        console.log("Gốc từ Google:", transcript); // Để bạn kiểm tra trong F12 nếu muốn
+        recognition.onstart = () => {
+            btn.classList.add('recording');
+            btn.innerText = "🔴 ĐANG NGHE...";
+        };
 
-        // --- BỘ LỌC THÔNG MINH ---
-        let processed = transcript
-            .toLowerCase()
-            .replace(/mờ/g, 'm')       // Chuyển "mờ" -> "m"
-            .replace(/\./g, '')        // Xóa dấu chấm (1.100 -> 1100)
-            .replace(/\s+/g, '')       // Xóa mọi khoảng trắng (m 1100 -> m1100)
-            .toUpperCase();            // Viết hoa (m1100 -> M1100)
+        recognition.onresult = (event) => {
+            let result = event.results[0][0].transcript;
+            
+            // Xử lý chuỗi giọng nói chuyên sâu
+            let processed = result.toLowerCase()
+                .replace(/mờ/g, 'm')       // Chuyển "mờ" thành "m"
+                .replace(/\./g, '')        // Xóa dấu chấm (1.000 -> 1000)
+                .replace(/\s+/g, '')       // Xóa mọi khoảng trắng (M 1000 -> M1000)
+                .toUpperCase();            // Viết hoa toàn bộ
 
-        document.getElementById('searchInput').value = processed;
-        filterTable();
-    };
+            document.getElementById('searchInput').value = processed;
+            filterTable();
+        };
 
-    rec.onend = () => { 
-        btn.classList.remove('recording'); 
-        btn.innerText = "🎤 GIỌNG NÓI"; 
-    };
+        recognition.onend = () => {
+            btn.classList.remove('recording');
+            btn.innerText = "🎤 GIỌNG NÓI";
+        };
 
-    rec.start();
-}
+        recognition.start();
+    }
+
+    // Tự động chạy khi mở trang
+    window.onload = fetchData;
+</script>
+
 </body>
 </html>
