@@ -3,42 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kho Việt Tuấn - Tìm Kiếm Thông Minh</title>
+    <title>Kho Việt Tuấn - Fix Lỗi Giọng Nói</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; padding: 15px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; padding: 10px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .search-area { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 100; border-bottom: 2px solid #3498db; }
-        .search-box { display: flex; gap: 8px; }
-        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; outline: none; }
-        input:focus { border-color: #3498db; }
-        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; }
-        .btn-voice { background: #e74c3c; color: white; min-width: 120px; }
+        .search-box { display: flex; gap: 5px; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
+        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
+        .btn-voice { background: #e74c3c; color: white; flex: 0 0 100px; }
         .btn-voice.recording { background: #c0392b; animation: pulse 1s infinite; }
-        .btn-reload { background: #27ae60; color: white; }
-        .table-wrapper { overflow-x: auto; max-height: 70vh; margin-top: 15px; border-radius: 8px; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { background: #1a5f7a; color: white; padding: 12px; position: sticky; top: 0; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 15px; }
-        tr:hover { background: #f1f9ff; }
+        .table-wrapper { overflow-x: auto; max-height: 75vh; margin-top: 10px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: #1a5f7a; color: white; padding: 10px; position: sticky; top: 0; text-align: left; font-size: 14px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
         .stock-low { color: #d63031; font-weight: bold; }
-        #status { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center; color:#1a5f7a;">TRA CỨU KHO THÔNG MINH</h2>
-    
     <div class="search-area">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Nói hoặc gõ để tìm (hỗ trợ tìm gần đúng)..." onkeyup="searchData()">
+            <input type="text" id="searchInput" placeholder="Tìm mã sp..." onkeyup="searchData()">
             <button class="btn-voice" id="voiceBtn" onclick="startVoice()">🎤 GIỌNG NÓI</button>
-            <button class="btn-reload" onclick="fetchData()">🔄 TẢI LẠI</button>
         </div>
-        <div id="status">Đang kết nối...</div>
+        <div id="status" style="font-size: 11px; margin-top: 5px;">Đang tải...</div>
     </div>
 
     <div class="table-wrapper">
@@ -46,8 +39,7 @@
             <thead>
                 <tr>
                     <th>Mã SP</th>
-                    <th>Mã Hàng (Tên)</th>
-                    <th>ĐVT</th>
+                    <th>Tên Hàng</th>
                     <th>Tồn</th>
                     <th>Giá</th>
                     <th>Chương trình</th>
@@ -61,10 +53,9 @@
 <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=954048889&single=true&output=csv";
     let allData = [];
-    let fuse; // Đối tượng tìm kiếm mờ
+    let fuse;
 
     function fetchData() {
-        document.getElementById('status').innerText = "⏳ Đang lấy dữ liệu...";
         Papa.parse(CSV_URL, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
@@ -76,16 +67,14 @@
                     return cleanRow;
                 }).filter(row => row['Mã sản phẩm'] || row['Mã hàng']);
 
-                // Khởi tạo Fuse.js sau khi có dữ liệu
-                const options = {
-                    keys: ['Mã sản phẩm', 'Mã hàng', 'Chương trình'],
-                    threshold: 0.4, // Độ nhạy (0: khớp tuyệt đối, 1: khớp bất cứ thứ gì)
+                fuse = new Fuse(allData, {
+                    keys: ['Mã sản phẩm', 'Mã hàng'],
+                    threshold: 0.3, // Giảm xuống một chút để chính xác hơn
                     distance: 100
-                };
-                fuse = new Fuse(allData, options);
+                });
 
                 renderTable(allData);
-                document.getElementById('status').innerHTML = `<b style="color:green">✅ Sẵn sàng.</b> Cập nhật: ${new Date().toLocaleTimeString()}`;
+                document.getElementById('status').innerText = "✅ Đã tải xong dữ liệu.";
             }
         });
     }
@@ -99,10 +88,9 @@
             tr.innerHTML = `
                 <td><b>${item['Mã sản phẩm'] || ''}</b></td>
                 <td>${item['Mã hàng'] || ''}</td>
-                <td>${item['ĐVT'] || ''}</td>
-                <td class="${(parseInt(ton) <= 0) ? 'stock-low' : ''}">${ton}</td>
+                <td class="${parseInt(ton) <= 0 ? 'stock-low' : ''}">${ton}</td>
                 <td>${item['Giá'] || ''}</td>
-                <td style="color:#00b894; font-size:13px">${item['Chương trình'] || ''}</td>
+                <td style="color:green; font-size:12px">${item['Chương trình'] || ''}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -111,34 +99,47 @@
     function searchData() {
         const query = document.getElementById('searchInput').value;
         if (!query) { renderTable(allData); return; }
-        
-        // Sử dụng Fuse để tìm kiếm gần đúng
         const results = fuse.search(query);
         renderTable(results.map(r => r.item));
     }
 
     function startVoice() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return alert("Trình duyệt không hỗ trợ.");
-
-        const recognition = new SpeechRecognition();
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'vi-VN';
         const btn = document.getElementById('voiceBtn');
 
-        recognition.onstart = () => { btn.classList.add('recording'); btn.innerText = "🔴 ĐANG NGHE..."; };
+        recognition.onstart = () => { btn.classList.add('recording'); btn.innerText = "🔴 ĐANG NGHE"; };
+        
         recognition.onresult = (event) => {
-            let text = event.results[0][0].transcript.toLowerCase()
-                .replace(/mờ/g, 'm').replace(/\./g, '').replace(/\s+/g, '').toUpperCase();
-            
-            document.getElementById('searchInput').value = text;
-            searchData(); // Chạy hàm tìm kiếm mờ
+            let text = event.results[0][0].transcript.toLowerCase();
+            console.log("Gốc:", text);
+
+            // BỘ LỌC ĐẶC BIỆT CHO LỖI "KHÔNG" -> "0"
+            let processed = text
+                .replace(/không/g, '0')
+                .replace(/một/g, '1')
+                .replace(/hai/g, '2')
+                .replace(/ba/g, '3')
+                .replace(/bốn/g, '4')
+                .replace(/năm/g, '5')
+                .replace(/sáu/g, '6')
+                .replace(/bảy/g, '7')
+                .replace(/tám/g, '8')
+                .replace(/chín/g, '9')
+                .replace(/mờ/g, 'm')
+                .replace(/\./g, '')  // Xóa dấu chấm phân cách số
+                .replace(/\s+/g, '') // Xóa mọi khoảng trắng
+                .toUpperCase();
+
+            document.getElementById('searchInput').value = processed;
+            searchData();
         };
+
         recognition.onend = () => { btn.classList.remove('recording'); btn.innerText = "🎤 GIỌNG NÓI"; };
         recognition.start();
     }
 
     window.onload = fetchData;
 </script>
-
 </body>
 </html>
