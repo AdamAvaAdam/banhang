@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7 - Việt Tuấn</title>
+    <title>Bravo Sync V7.1 - Việt Tuấn</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; color: #333; padding-bottom: 20px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
+        /* Ô tìm kiếm có dấu X */
+        .search-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+        #searchBox { width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
+        #searchBox:focus { border-color: var(--primary); }
+        #clearSearch { position: absolute; right: 10px; font-size: 20px; color: #999; cursor: pointer; display: none; user-select: none; font-weight: bold; }
+
         .action-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
         button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
-        #searchBox { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
-        #searchBox:focus { border-color: var(--primary); }
-
+        
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
@@ -25,14 +29,11 @@
         .ma-sp { color: #999; font-size: 11px; display: block; margin-top: 2px; font-family: monospace; }
         .km-label { font-size: 13px; color: var(--success); font-weight: 500; }
         
-        /* Ẩn tồn kho */
         .hidden-stock .stock-val { display: none; }
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
-        
         .loading { text-align: center; padding: 50px; color: #666; font-style: italic; }
 
-        /* Mobile: Cho phép cuộn ngang bảng nếu màn hình quá nhỏ */
         @media (max-width: 600px) {
             .table-res { overflow-x: auto; }
             td, th { padding: 10px 5px; font-size: 13px; }
@@ -45,7 +46,10 @@
 
 <div class="container">
     <div class="action-bar">
-        <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="filterTable()">
+        <div class="search-wrapper">
+            <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="handleSearch()">
+            <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
+        </div>
         <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
         <button onclick="loadData()" style="background: var(--success);">LÀM MỚI</button>
     </div>
@@ -68,7 +72,6 @@
 </div>
 
 <script>
-    // Link CSV của anh Dũng
     const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
 
@@ -102,42 +105,32 @@
     async function loadData() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '<tr><td colspan="4" class="loading">Đang đồng bộ dữ liệu...</td></tr>';
-        
         try {
             const [csvStock, csvPrice] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
                 fetch(URL_PRICE + "&cache=" + Date.now()).then(r => r.text())
             ]);
-
             const stockRows = parseCSV(csvStock);
             const priceRows = parseCSV(csvPrice);
 
-            // Tồn kho: Cột A(0) là Mã, Cột D(3) là Số lượng
             let stockMap = {};
             stockRows.forEach(cols => {
-                const ma = cols[0];
-                const ton = cols[3];
-                if (ma && ma !== "Mã") stockMap[ma] = ton;
+                if (cols[0] && cols[0] !== "Mã") stockMap[cols[0]] = cols[3];
             });
 
-            // Bảng giá: Cột A(0) là Mã, B(1) là Tên, F(5) là Giá, I(8) là KM
             masterData = [];
             priceRows.forEach(cols => {
                 const ma = cols[0];
-                const ten = cols[1];
                 const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
                 const gia = parseInt(giaRaw);
-                // Lấy cột I (chỉ mục 8) cho Khuyến mãi
                 const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
-
                 if (ma && gia > 0 && stockMap[ma] !== undefined) {
-                    masterData.push({ ma, ten, ton: stockMap[ma], gia, km });
+                    masterData.push({ ma, ten: cols[1], ton: stockMap[ma], gia, km });
                 }
             });
-
             renderTable(masterData);
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="4" class="loading" style="color:red">Lỗi kết nối. Hãy kiểm tra Link trang tính!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="loading" style="color:red">Lỗi kết nối trang tính!</td></tr>';
         }
     }
 
@@ -145,35 +138,42 @@
         const tbody = document.getElementById('tableBody');
         const hideClass = isHidden ? 'hidden-stock' : '';
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="loading">Không tìm thấy dữ liệu phù hợp.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="loading">Không tìm thấy dữ liệu.</td></tr>';
             return;
         }
-
         tbody.innerHTML = data.map(item => `
             <tr class="${hideClass}">
-                <td>
-                    <b style="color:#000; display:block;">${item.ten}</b>
-                    <span class="ma-sp">${item.ma}</span>
-                </td>
-                <td class="stock">
-                    <span class="stock-val">${item.ton}</span>
-                    <span class="stock-mask">***</span>
-                </td>
+                <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
+                <td class="stock"><span class="stock-val">${item.ton}</span><span class="stock-mask">***</span></td>
                 <td class="price">${item.gia.toLocaleString('vi-VN')}đ</td>
                 <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
             </tr>
         `).join('');
     }
 
-    function toggleStock() {
-        isHidden = !isHidden;
-        document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN";
-        renderTable(masterData);
+    function handleSearch() {
+        const val = document.getElementById('searchBox').value;
+        const btnClear = document.getElementById('clearSearch');
+        btnClear.style.display = val.length > 0 ? "block" : "none";
+        filterTable();
+    }
+
+    function clearSearchInput() {
+        document.getElementById('searchBox').value = "";
+        document.getElementById('clearSearch').style.display = "none";
+        filterTable();
+        document.getElementById('searchBox').focus();
     }
 
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
         renderTable(masterData.filter(i => i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q)));
+    }
+
+    function toggleStock() {
+        isHidden = !isHidden;
+        document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN";
+        renderTable(masterData);
     }
 </script>
 </body>
