@@ -3,36 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync - Việt Tuấn</title>
+    <title>Bravo Sync V6 - Việt Tuấn</title>
     <style>
-        :root { --primary: #1a73e8; --danger: #d93025; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: #f0f2f5; padding-bottom: 20px; }
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        :root { --primary: #1a73e8; --danger: #d93025; --text: #333; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; color: var(--text); padding-bottom: 20px; }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1000px; margin: auto; }
-        .action-bar { display: flex; gap: 8px; margin-bottom: 15px; align-items: center; }
-        button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; }
-        #searchBox { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        
+        .action-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+        button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
+        #searchBox { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
+        #searchBox:focus { border-color: var(--primary); }
+
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #555; }
-        td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
-        .price { color: var(--danger); font-weight: bold; font-size: 15px; }
-        .stock { color: var(--primary); font-weight: bold; text-align: center; }
-        .ma-sp { color: #888; font-size: 11px; display: block; margin-top: 4px; }
-        .km { font-size: 12px; color: #666; font-style: italic; margin-top: 4px; }
+        th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
+        td { padding: 15px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
+        
+        .price { color: var(--danger); font-weight: bold; font-size: 16px; display: block; margin-bottom: 4px; }
+        .stock { color: var(--primary); font-weight: bold; text-align: center; font-size: 15px; }
+        .ma-sp { color: #999; font-size: 11px; display: block; margin-top: 4px; font-family: monospace; }
+        .km-text { font-size: 13px; color: #28a745; font-weight: 500; line-height: 1.4; display: block; background: #f0fdf4; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #28a745; }
+        
         .hidden-stock .stock-val { display: none; }
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
-        .loading { text-align: center; padding: 40px; color: #666; font-style: italic; }
+        .loading { text-align: center; padding: 50px; color: #666; font-style: italic; }
     </style>
 </head>
 <body>
 
-<div class="header"><h3 style="margin:0">HỆ THỐNG TRA CỨU VIỆT TUẤN</h3></div>
+<div class="header"><h3 style="margin:0">TRA CỨU BRAVO - VIỆT TUẤN</h3></div>
 
 <div class="container">
     <div class="action-bar">
-        <input type="text" id="searchBox" placeholder="Tìm sản phẩm..." onkeyup="filterTable()">
+        <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="filterTable()">
         <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
         <button onclick="loadData()" style="background: #28a745;">LÀM MỚI</button>
     </div>
@@ -41,13 +46,13 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50%;">SẢN PHẨM</th>
+                    <th style="width: 45%;">SẢN PHẨM</th>
                     <th style="width: 15%; text-align:center">TỒN</th>
-                    <th style="width: 35%;">GIÁ & KM</th>
+                    <th style="width: 40%;">GIÁ & KHUYẾN MÃI</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="3" class="loading">Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="3" class="loading">Đang tải dữ liệu từ Google Sheets...</td></tr>
             </tbody>
         </table>
     </div>
@@ -62,54 +67,58 @@
 
     window.onload = loadData;
 
-    // Hàm bóc tách CSV cực mạnh, chấp nhận cả dấu phẩy nằm trong ngoặc kép
+    // Hàm parse CSV thông minh xử lý ngoặc kép và dấu phẩy nội bộ
     function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
-        for (let line of lines) {
+        lines.forEach(line => {
+            if (!line.trim()) return;
             const row = [];
-            let current = '';
+            let curr = '';
             let inQuotes = false;
-            for (let char of line) {
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
                 if (char === '"') inQuotes = !inQuotes;
                 else if (char === ',' && !inQuotes) {
-                    row.push(current.trim());
-                    current = '';
-                } else current += char;
+                    row.push(curr.trim());
+                    curr = '';
+                } else curr += char;
             }
-            row.push(current.trim());
+            row.push(curr.trim());
             rows.push(row);
-        }
+        });
         return rows;
     }
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="3" class="loading">Đang cập nhật bản mới nhất...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="loading">Đang cập nhật tồn kho và giá mới nhất...</td></tr>';
         
         try {
             const [csvStock, csvPrice] = await Promise.all([
-                fetch(URL_STOCK + "&t=" + Date.now()).then(r => r.text()),
-                fetch(URL_PRICE + "&t=" + Date.now()).then(r => r.text())
+                fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
+                fetch(URL_PRICE + "&cache=" + Date.now()).then(r => r.text())
             ]);
 
             const stockRows = parseCSV(csvStock);
             const priceRows = parseCSV(csvPrice);
 
+            // Map tồn kho: Cột A (0) là Mã, Cột D (3) là Tồn
             let stockMap = {};
             stockRows.forEach(cols => {
-                const ma = cols[0]; // Cột A
-                const ton = cols[3]; // Cột D
-                if (ma && ma !== "A") stockMap[ma] = ton;
+                const ma = cols[0];
+                const ton = cols[3];
+                if (ma && ma !== "Mã") stockMap[ma] = ton;
             });
 
+            // Ghép giá: Cột A (0) là Mã, B (1) là Tên, F (5) là Giá, J (9) là KM
             masterData = [];
             priceRows.forEach(cols => {
-                const ma = cols[0];  // Cột A
-                const ten = cols[1]; // Cột B
-                const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0"; // Cột F
+                const ma = cols[0];
+                const ten = cols[1];
+                const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
                 const gia = parseInt(giaRaw);
-                const km = cols[9] || "-"; // Cột J
+                const km = cols[9] ? cols[9].replace(/^"|"$/g, '') : "-";
 
                 if (ma && gia > 0 && stockMap[ma] !== undefined) {
                     masterData.push({ ma, ten, ton: stockMap[ma], gia, km });
@@ -118,7 +127,7 @@
 
             renderTable(masterData);
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="3" class="loading" style="color:red">Lỗi tải dữ liệu. Hãy đảm bảo đã Xuất bản lên web!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="loading" style="color:red">Lỗi tải dữ liệu. Hãy kiểm tra kết nối mạng!</td></tr>';
         }
     }
 
@@ -126,14 +135,24 @@
         const tbody = document.getElementById('tableBody');
         const hideClass = isHidden ? 'hidden-stock' : '';
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="loading">Không khớp mã SP nào. Kiểm tra cột A ở 2 trang tính!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="loading">Không tìm thấy mã khớp giữa Tồn và Giá.</td></tr>';
             return;
         }
+
         tbody.innerHTML = data.map(item => `
             <tr class="${hideClass}">
-                <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
-                <td class="stock"><span class="stock-val">${item.ton}</span><span class="stock-mask">***</span></td>
-                <td><div class="price">${item.gia.toLocaleString('vi-VN')}đ</div><div class="km">${item.km}</div></td>
+                <td>
+                    <b style="color:#000">${item.ten}</b>
+                    <span class="ma-sp">${item.ma}</span>
+                </td>
+                <td class="stock">
+                    <span class="stock-val">${item.ton}</span>
+                    <span class="stock-mask">***</span>
+                </td>
+                <td>
+                    <span class="price">${item.gia.toLocaleString('vi-VN')}đ</span>
+                    ${item.km !== "-" ? `<span class="km-text">🎁 ${item.km}</span>` : ""}
+                </td>
             </tr>
         `).join('');
     }
