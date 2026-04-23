@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.2 - Báo Giá Nhanh</title>
+    <title>Bravo Sync V7.3 - Báo Giá Chuyên Nghiệp</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --bg: #f4f6f9; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
@@ -26,7 +26,6 @@
         #clearSearch { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #999; cursor: pointer; display: none; font-weight: bold; }
 
         button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; transition: 0.2s; }
-        button:active { opacity: 0.8; }
         .btn-quote { background: var(--warning); color: #fff; }
         
         /* Table Styles */
@@ -46,20 +45,15 @@
         .stock-mask { display: none; }
         .loading { text-align: center; padding: 50px; color: #666; }
 
-        /* Modal Báo Giá */
-        .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: flex-start; padding-top: 30px; overflow-y: auto; }
-        .quote-modal { background: white; width: 95%; max-width: 600px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); margin-bottom: 50px; }
-        .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; }
-        .quote-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .quote-table th, .quote-table td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 14px; }
-        .quote-table th { background: #f9f9f9; color: #555; }
+        /* MODAL FIX: Chống tràn và hỗ trợ cuộn */
+        .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
+        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
+        .quote-scroll-area { overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; flex-grow: 1; }
+        .quote-table { width: 100%; border-collapse: collapse; }
+        .quote-table th { position: sticky; top: 0; background: #f9f9f9; padding: 10px; border: 1px solid #eee; z-index: 10; }
+        .quote-table td { padding: 10px; border: 1px solid #eee; font-size: 14px; }
         
-        @media (max-width: 600px) {
-            .table-res { overflow-x: auto; }
-            .action-bar { flex-direction: column; align-items: stretch; }
-            .weather-card { min-width: 100%; }
-        }
-
         @media print { .no-print { display: none; } }
     </style>
 </head>
@@ -69,8 +63,8 @@
 
 <div class="container">
     <div class="weather-wrap" id="weatherContent">
-        <div class="weather-card">Đang tải thời tiết Hà Nội...</div>
-        <div class="weather-card">Đang tải thời tiết Hưng Yên...</div>
+        <div class="weather-card">Đang tải thời tiết...</div>
+        <div class="weather-card">Đang tải thời tiết...</div>
     </div>
 
     <div class="action-bar">
@@ -94,34 +88,31 @@
                     <th style="width: 30%;">KHUYẾN MÃI</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="5" class="loading">Đang tải dữ liệu...</td></tr>
-            </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
 <div id="quoteOverlay" class="quote-overlay">
-    <div class="quote-modal" id="printableQuote">
+    <div class="quote-modal">
         <div class="quote-header">
-            <h2 style="margin:0; color: var(--primary);">BÁO GIÁ SẢN PHẨM</h2>
-            <small id="quoteDate"></small>
+            <h2 style="margin:0; color: var(--primary); font-size: 20px;">BÁO GIÁ SẢN PHẨM</h2>
+            <small id="quoteDate" style="color: #666;"></small>
         </div>
-        <table class="quote-table">
-            <thead>
-                <tr>
-                    <th>Tên sản phẩm</th>
-                    <th style="text-align:right">Đơn giá</th>
-                    <th>Ghi chú / KM</th>
-                </tr>
-            </thead>
-            <tbody id="quoteBody"></tbody>
-        </table>
-        <div style="text-align:center; font-style: italic; font-size: 12px; color: #777; margin-bottom: 15px;">
-            Cảm ơn quý khách đã quan tâm đến sản phẩm của Việt Tuấn!
+        <div class="quote-scroll-area">
+            <table class="quote-table">
+                <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th style="text-align:right">Đơn giá</th>
+                        <th>Ghi chú / KM</th>
+                    </tr>
+                </thead>
+                <tbody id="quoteBody"></tbody>
+            </table>
         </div>
-        <div class="no-print" style="display: flex; gap: 10px;">
-            <button onclick="closeQuote()" style="background:#666; flex:1">ĐÓNG</button>
+        <div class="no-print" style="display: flex; gap: 10px; flex-shrink: 0;">
+            <button onclick="closeQuote()" style="background:#666; flex:1">ĐÓNG & BỎ CHỌN</button>
             <button onclick="window.print()" style="background:var(--primary); flex:1">LƯU PDF / IN</button>
         </div>
     </div>
@@ -135,15 +126,11 @@
     let isHidden = false;
     let selectedItems = new Set(); 
 
-    window.onload = () => {
-        loadData();
-        loadWeather();
-    };
+    window.onload = () => { loadData(); loadWeather(); };
 
-    // --- Thời tiết ---
     async function fetchWeather(lat, lon, name) {
         try {
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia%2FBangkok`);
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
             const data = await res.json();
             let html = `<div class="weather-title">📍 Dự báo ${name}</div><div class="weather-days">`;
             for(let i=0; i<3; i++) {
@@ -160,7 +147,6 @@
         document.getElementById('weatherContent').innerHTML = `<div class="weather-card">${hn}</div><div class="weather-card">${hy}</div>`;
     }
 
-    // --- Xử lý dữ liệu ---
     function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
@@ -180,7 +166,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" class="loading">Đang đồng bộ dữ liệu Bravo...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="loading">Đang tải...</td></tr>';
         try {
             const [csvStock, csvPrice] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
@@ -190,7 +176,6 @@
             const priceRows = parseCSV(csvPrice);
             let stockMap = {};
             stockRows.forEach(cols => { if (cols[0] && cols[0] !== "Mã") stockMap[cols[0]] = cols[3]; });
-
             masterData = [];
             priceRows.forEach(cols => {
                 const ma = cols[0];
@@ -202,70 +187,54 @@
                 }
             });
             renderTable(masterData);
-        } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="5" class="loading" style="color:red">Lỗi kết nối dữ liệu!</td></tr>';
-        }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="loading">Lỗi kết nối!</td></tr>'; }
     }
 
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         const hideClass = isHidden ? 'hidden-stock' : '';
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="loading">Không tìm thấy sản phẩm.</td></tr>';
-            return;
-        }
-        tbody.innerHTML = data.map(item => {
-            const isChecked = selectedItems.has(item.ma) ? 'checked' : '';
-            const rowClass = selectedItems.has(item.ma) ? 'selected-row' : '';
-            return `
-                <tr class="${hideClass} ${rowClass}">
-                    <td style="text-align:center"><input type="checkbox" ${isChecked} onclick="toggleSelect('${item.ma}')" style="width:18px; height:18px; cursor:pointer"></td>
-                    <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
-                    <td class="stock"><span class="stock-val">${item.ton}</span><span class="stock-mask">***</span></td>
-                    <td class="price">${item.gia.toLocaleString('vi-VN')}đ</td>
-                    <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
-                </tr>
-            `;
-        }).join('');
+        tbody.innerHTML = data.map(item => `
+            <tr class="${hideClass} ${selectedItems.has(item.ma) ? 'selected-row' : ''}">
+                <td style="text-align:center"><input type="checkbox" ${selectedItems.has(item.ma) ? 'checked' : ''} onclick="toggleSelect('${item.ma}')" style="width:18px; height:18px;"></td>
+                <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
+                <td class="stock"><span class="stock-val">${item.ton}</span><span class="stock-mask">***</span></td>
+                <td class="price">${item.gia.toLocaleString('vi-VN')}đ</td>
+                <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
+            </tr>
+        `).join('');
         document.getElementById('selectedCount').innerText = selectedItems.size;
     }
 
-    // --- Tính năng chọn và báo giá ---
     function toggleSelect(ma) {
         if (selectedItems.has(ma)) selectedItems.delete(ma);
         else selectedItems.add(ma);
         document.getElementById('selectedCount').innerText = selectedItems.size;
-        
-        // Update UI row color without full re-render for performance
+        // Cập nhật màu nền dòng ngay lập tức
         const rows = document.querySelectorAll('#tableBody tr');
-        rows.forEach(row => {
-            if (row.querySelector('.ma-sp')?.innerText === ma) {
-                row.classList.toggle('selected-row');
-            }
-        });
+        rows.forEach(row => { if (row.querySelector('.ma-sp')?.innerText === ma) row.classList.toggle('selected-row'); });
     }
 
     function showQuote() {
-        if (selectedItems.size === 0) { alert("Vui lòng tích chọn ít nhất 1 sản phẩm!"); return; }
-        const quoteBody = document.getElementById('quoteBody');
+        if (selectedItems.size === 0) return alert("Chưa chọn sản phẩm!");
         const items = masterData.filter(i => selectedItems.has(i.ma));
-        
-        quoteBody.innerHTML = items.map(i => `
+        document.getElementById('quoteBody').innerHTML = items.map(i => `
             <tr>
-                <td><b>${i.ten}</b><br><small style="color:#888">${i.ma}</small></td>
-                <td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td>
-                <td style="font-size:12px; color:var(--success)">${i.km !== "-" ? i.km : ""}</td>
+                <td><b>${i.ten}</b><br><small>${i.ma}</small></td>
+                <td style="text-align:right; font-weight:bold; color:red">${i.gia.toLocaleString('vi-VN')}đ</td>
+                <td style="font-size:12px; color:green">${i.km !== "-" ? i.km : ""}</td>
             </tr>
         `).join('');
-
-        const now = new Date();
-        document.getElementById('quoteDate').innerText = `Ngày báo giá: ${now.getHours()}:${now.getMinutes()} - ${now.toLocaleDateString('vi-VN')}`;
+        document.getElementById('quoteDate').innerText = "Ngày: " + new Date().toLocaleString('vi-VN');
         document.getElementById('quoteOverlay').style.display = 'flex';
     }
 
-    function closeQuote() { document.getElementById('quoteOverlay').style.display = 'none'; }
+    // GIẢI PHÁP: Xóa sạch lựa chọn sau khi xong việc
+    function closeQuote() {
+        selectedItems.clear(); // Xóa sạch danh sách đã chọn
+        document.getElementById('quoteOverlay').style.display = 'none';
+        filterTable(); // Vẽ lại bảng chính để bỏ hết các dấu tích và màu nền
+    }
 
-    // --- Tìm kiếm & Phụ trợ ---
     function handleSearch() {
         const val = document.getElementById('searchBox').value;
         document.getElementById('clearSearch').style.display = val.length > 0 ? "block" : "none";
@@ -275,7 +244,6 @@
     function clearSearchInput() {
         document.getElementById('searchBox').value = "";
         handleSearch();
-        document.getElementById('searchBox').focus();
     }
 
     function filterTable() {
