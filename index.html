@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.3 - Báo Giá Chuyên Nghiệp</title>
+    <title>Bravo Sync V7.5 - Chụp Báo Giá Toàn Màn Hình</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --bg: #f4f6f9; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
@@ -25,35 +25,36 @@
         #searchBox { width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
         #clearSearch { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #999; cursor: pointer; display: none; font-weight: bold; }
 
-        button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; transition: 0.2s; }
+        button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
         .btn-quote { background: var(--warning); color: #fff; }
         
-        /* Table Styles */
+        /* Main Table */
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
-        
         .selected-row { background-color: #fff9c4 !important; }
-        .price { color: var(--danger); font-weight: bold; font-size: 15px; white-space: nowrap; }
-        .stock { color: var(--primary); font-weight: bold; text-align: center; }
+        .price { color: var(--danger); font-weight: bold; font-size: 15px; }
         .ma-sp { color: #999; font-size: 11px; display: block; font-family: monospace; }
         .km-label { font-size: 13px; color: var(--success); font-weight: 500; }
         
         .hidden-stock .stock-val { display: none; }
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
-        .loading { text-align: center; padding: 50px; color: #666; }
 
-        /* MODAL FIX: Chống tràn và hỗ trợ cuộn */
+        /* Modal Báo giá - Chống tràn & Tối ưu chụp ảnh */
         .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
-        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; transition: 0.3s; }
         .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
         .quote-scroll-area { overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; flex-grow: 1; }
         .quote-table { width: 100%; border-collapse: collapse; }
         .quote-table th { position: sticky; top: 0; background: #f9f9f9; padding: 10px; border: 1px solid #eee; z-index: 10; }
-        .quote-table td { padding: 10px; border: 1px solid #eee; font-size: 14px; }
+        .quote-table td { padding: 12px; border: 1px solid #eee; font-size: 14px; }
         
+        /* CSS khi bật Toàn màn hình */
+        #quoteModalContainer:fullscreen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
+        #quoteModalContainer:-webkit-full-screen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
+
         @media print { .no-print { display: none; } }
     </style>
 </head>
@@ -62,10 +63,7 @@
 <div class="header"><h3 style="margin:0">HỆ THỐNG TRA CỨU & BÁO GIÁ - VIỆT TUẤN</h3></div>
 
 <div class="container">
-    <div class="weather-wrap" id="weatherContent">
-        <div class="weather-card">Đang tải thời tiết...</div>
-        <div class="weather-card">Đang tải thời tiết...</div>
-    </div>
+    <div class="weather-wrap" id="weatherContent"></div>
 
     <div class="action-bar">
         <div class="search-wrapper">
@@ -94,9 +92,9 @@
 </div>
 
 <div id="quoteOverlay" class="quote-overlay">
-    <div class="quote-modal">
+    <div class="quote-modal" id="quoteModalContainer">
         <div class="quote-header">
-            <h2 style="margin:0; color: var(--primary); font-size: 20px;">BÁO GIÁ SẢN PHẨM</h2>
+            <h2 style="margin:0; color: var(--primary); font-size: 22px;">BÁO GIÁ SẢN PHẨM</h2>
             <small id="quoteDate" style="color: #666;"></small>
         </div>
         <div class="quote-scroll-area">
@@ -113,7 +111,7 @@
         </div>
         <div class="no-print" style="display: flex; gap: 10px; flex-shrink: 0;">
             <button onclick="closeQuote()" style="background:#666; flex:1">ĐÓNG & BỎ CHỌN</button>
-            <button onclick="window.print()" style="background:var(--primary); flex:1">LƯU PDF / IN</button>
+            <button onclick="toggleFullScreen()" style="background:var(--success); flex:2">TOÀN MÀN HÌNH ĐỂ CHỤP</button>
         </div>
     </div>
 </div>
@@ -124,29 +122,30 @@
 
     let masterData = [];
     let isHidden = false;
-    let selectedItems = new Set(); 
+    let selectedIndices = new Set(); 
 
     window.onload = () => { loadData(); loadWeather(); };
 
+    // --- Weather ---
     async function fetchWeather(lat, lon, name) {
         try {
             const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
             const data = await res.json();
-            let html = `<div class="weather-title">📍 Dự báo ${name}</div><div class="weather-days">`;
+            let html = `<div class="weather-card"><div class="weather-title">📍 Dự báo ${name}</div><div class="weather-days">`;
             for(let i=0; i<3; i++) {
-                const date = new Date(data.daily.time[i]);
-                const dayLabel = i === 0 ? "Hôm nay" : `${date.getDate()}/${date.getMonth()+1}`;
+                const dayLabel = i === 0 ? "Hôm nay" : `${new Date(data.daily.time[i]).getDate()}/${new Date(data.daily.time[i]).getMonth()+1}`;
                 html += `<div class="day-item"><b>${dayLabel}</b><span class="temp">${Math.round(data.daily.temperature_2m_min[i])}°-${Math.round(data.daily.temperature_2m_max[i])}°C</span></div>`;
             }
-            return html + `</div>`;
-        } catch (e) { return `<div class="weather-title">Lỗi tải thời tiết ${name}</div>`; }
+            return html + `</div></div>`;
+        } catch (e) { return `<div class="weather-card">Lỗi tải thời tiết ${name}</div>`; }
     }
 
     async function loadWeather() {
         const [hn, hy] = await Promise.all([fetchWeather(21.0245, 105.8412, "Hà Nội"), fetchWeather(20.6464, 106.0511, "Hưng Yên")]);
-        document.getElementById('weatherContent').innerHTML = `<div class="weather-card">${hn}</div><div class="weather-card">${hy}</div>`;
+        document.getElementById('weatherContent').innerHTML = hn + hy;
     }
 
+    // --- Data Processing ---
     function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
@@ -166,7 +165,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" class="loading">Đang tải...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu...</td></tr>';
         try {
             const [csvStock, csvPrice] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
@@ -176,65 +175,94 @@
             const priceRows = parseCSV(csvPrice);
             let stockMap = {};
             stockRows.forEach(cols => { if (cols[0] && cols[0] !== "Mã") stockMap[cols[0]] = cols[3]; });
+            
             masterData = [];
-            priceRows.forEach(cols => {
+            priceRows.forEach((cols, idx) => {
                 const ma = cols[0];
                 const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
                 const gia = parseInt(giaRaw);
                 const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
                 if (ma && gia > 0 && stockMap[ma] !== undefined) {
-                    masterData.push({ ma, ten: cols[1], ton: stockMap[ma], gia, km });
+                    masterData.push({ id: masterData.length, ma, ten: cols[1], ton: stockMap[ma], gia, km });
                 }
             });
             renderTable(masterData);
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="loading">Lỗi kết nối!</td></tr>'; }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối trang tính!</td></tr>'; }
     }
 
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         const hideClass = isHidden ? 'hidden-stock' : '';
         tbody.innerHTML = data.map(item => `
-            <tr class="${hideClass} ${selectedItems.has(item.ma) ? 'selected-row' : ''}">
-                <td style="text-align:center"><input type="checkbox" ${selectedItems.has(item.ma) ? 'checked' : ''} onclick="toggleSelect('${item.ma}')" style="width:18px; height:18px;"></td>
+            <tr class="${hideClass} ${selectedIndices.has(item.id) ? 'selected-row' : ''}">
+                <td style="text-align:center">
+                    <input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} 
+                           onclick="toggleSelect(${item.id})" style="width:18px; height:18px; cursor:pointer">
+                </td>
                 <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
-                <td class="stock"><span class="stock-val">${item.ton}</span><span class="stock-mask">***</span></td>
+                <td style="text-align:center;font-weight:bold;color:var(--primary)">
+                    <span class="stock-val">${item.ton}</span><span class="stock-mask">***</span>
+                </td>
                 <td class="price">${item.gia.toLocaleString('vi-VN')}đ</td>
                 <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
             </tr>
         `).join('');
-        document.getElementById('selectedCount').innerText = selectedItems.size;
+        document.getElementById('selectedCount').innerText = selectedIndices.size;
     }
 
-    function toggleSelect(ma) {
-        if (selectedItems.has(ma)) selectedItems.delete(ma);
-        else selectedItems.add(ma);
-        document.getElementById('selectedCount').innerText = selectedItems.size;
-        // Cập nhật màu nền dòng ngay lập tức
+    function toggleSelect(id) {
+        if (selectedIndices.has(id)) selectedIndices.delete(id);
+        else selectedIndices.add(id);
+        document.getElementById('selectedCount').innerText = selectedIndices.size;
+        
+        // Refresh UI row color
         const rows = document.querySelectorAll('#tableBody tr');
-        rows.forEach(row => { if (row.querySelector('.ma-sp')?.innerText === ma) row.classList.toggle('selected-row'); });
+        rows.forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.onclick.toString().includes(id)) {
+                row.classList.toggle('selected-row');
+            }
+        });
     }
 
+    // --- Quote Modal Logic ---
     function showQuote() {
-        if (selectedItems.size === 0) return alert("Chưa chọn sản phẩm!");
-        const items = masterData.filter(i => selectedItems.has(i.ma));
+        if (selectedIndices.size === 0) return alert("Vui lòng tích chọn sản phẩm!");
+        const items = masterData.filter(i => selectedIndices.has(i.id));
+        
         document.getElementById('quoteBody').innerHTML = items.map(i => `
             <tr>
-                <td><b>${i.ten}</b><br><small>${i.ma}</small></td>
-                <td style="text-align:right; font-weight:bold; color:red">${i.gia.toLocaleString('vi-VN')}đ</td>
-                <td style="font-size:12px; color:green">${i.km !== "-" ? i.km : ""}</td>
+                <td><b>${i.ten}</b><br><small style="color:#666">${i.ma}</small></td>
+                <td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td>
+                <td style="font-size:12px; color:var(--success)">${i.km !== "-" ? i.km : ""}</td>
             </tr>
         `).join('');
+        
         document.getElementById('quoteDate').innerText = "Ngày: " + new Date().toLocaleString('vi-VN');
         document.getElementById('quoteOverlay').style.display = 'flex';
     }
 
-    // GIẢI PHÁP: Xóa sạch lựa chọn sau khi xong việc
     function closeQuote() {
-        selectedItems.clear(); // Xóa sạch danh sách đã chọn
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            toggleFullScreen(); // Thoát toàn màn hình nếu đang bật
+        }
+        selectedIndices.clear();
         document.getElementById('quoteOverlay').style.display = 'none';
-        filterTable(); // Vẽ lại bảng chính để bỏ hết các dấu tích và màu nền
+        filterTable();
     }
 
+    function toggleFullScreen() {
+        const elem = document.getElementById("quoteModalContainer");
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (elem.requestFullscreen) { elem.requestFullscreen(); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+        } else {
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+        }
+    }
+
+    // --- Search & Utils ---
     function handleSearch() {
         const val = document.getElementById('searchBox').value;
         document.getElementById('clearSearch').style.display = val.length > 0 ? "block" : "none";
@@ -248,7 +276,8 @@
 
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
-        renderTable(masterData.filter(i => i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q)));
+        const filtered = masterData.filter(i => i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q));
+        renderTable(filtered);
     }
 
     function toggleStock() {
