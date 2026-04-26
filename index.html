@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.5 - Chụp Báo Giá Toàn Màn Hình</title>
+    <title>Bravo Sync V7.5 - Tìm Theo Chương Trình</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --bg: #f4f6f9; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
@@ -24,12 +24,15 @@
         .search-wrapper { position: relative; flex: 2; min-width: 200px; }
         #searchBox { width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
         #clearSearch { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #999; cursor: pointer; display: none; font-weight: bold; }
+        
+        /* Filter Select */
+        #filterKM { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; outline: none; flex: 1; min-width: 180px; cursor: pointer; color: var(--primary); font-weight: 500; }
 
         button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
         .btn-quote { background: var(--warning); color: #fff; }
         
         /* Main Table */
-        .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
@@ -42,18 +45,16 @@
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
 
-        /* Modal Báo giá - Chống tràn & Tối ưu chụp ảnh */
+        /* Modal Báo giá */
         .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
-        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; transition: 0.3s; }
+        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
         .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
         .quote-scroll-area { overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; flex-grow: 1; }
         .quote-table { width: 100%; border-collapse: collapse; }
         .quote-table th { position: sticky; top: 0; background: #f9f9f9; padding: 10px; border: 1px solid #eee; z-index: 10; }
         .quote-table td { padding: 12px; border: 1px solid #eee; font-size: 14px; }
         
-        /* CSS khi bật Toàn màn hình */
         #quoteModalContainer:fullscreen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
-        #quoteModalContainer:-webkit-full-screen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
 
         @media print { .no-print { display: none; } }
     </style>
@@ -67,9 +68,14 @@
 
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="handleSearch()">
+            <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="filterTable()">
             <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
         </div>
+        
+        <select id="filterKM" onchange="filterTable()">
+            <option value="">-- Tất cả chương trình --</option>
+        </select>
+
         <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
         <button class="btn-quote" onclick="showQuote()">TẠO BÁO GIÁ (<span id="selectedCount">0</span>)</button>
         <button onclick="loadData()" style="background: var(--success);">LÀM MỚI</button>
@@ -165,7 +171,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu từ Google Sheets...</td></tr>';
         try {
             const [csvStock, csvPrice] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
@@ -186,8 +192,25 @@
                     masterData.push({ id: masterData.length, ma, ten: cols[1], ton: stockMap[ma], gia, km });
                 }
             });
-            renderTable(masterData);
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối trang tính!</td></tr>'; }
+
+            updateKMList(masterData);
+            filterTable();
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối trang tính! Vui lòng kiểm tra Internet.</td></tr>'; }
+    }
+
+    // Tự động gom nhóm các chương trình KM duy nhất
+    function updateKMList(data) {
+        const filterKM = document.getElementById('filterKM');
+        const kmSet = new Set();
+        data.forEach(item => {
+            if (item.km && item.km !== "-") kmSet.add(item.km);
+        });
+
+        let html = '<option value="">-- Tất cả chương trình --</option>';
+        Array.from(kmSet).sort().forEach(km => {
+            html += `<option value="${km}">${km}</option>`;
+        });
+        filterKM.innerHTML = html;
     }
 
     function renderTable(data) {
@@ -210,19 +233,28 @@
         document.getElementById('selectedCount').innerText = selectedIndices.size;
     }
 
+    function filterTable() {
+        const q = document.getElementById('searchBox').value.toLowerCase();
+        const kmFilter = document.getElementById('filterKM').value;
+        
+        document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
+
+        const filtered = masterData.filter(i => {
+            const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q);
+            const matchKM = kmFilter === "" || i.km === kmFilter;
+            return matchSearch && matchKM;
+        });
+        renderTable(filtered);
+    }
+
     function toggleSelect(id) {
         if (selectedIndices.has(id)) selectedIndices.delete(id);
         else selectedIndices.add(id);
         document.getElementById('selectedCount').innerText = selectedIndices.size;
         
-        // Refresh UI row color
+        // Refresh UI row color nhanh
         const rows = document.querySelectorAll('#tableBody tr');
-        rows.forEach(row => {
-            const checkbox = row.querySelector('input[type="checkbox"]');
-            if (checkbox && checkbox.onclick.toString().includes(id)) {
-                row.classList.toggle('selected-row');
-            }
-        });
+        filterTable();
     }
 
     // --- Quote Modal Logic ---
@@ -243,9 +275,7 @@
     }
 
     function closeQuote() {
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
-            toggleFullScreen(); // Thoát toàn màn hình nếu đang bật
-        }
+        if (document.fullscreenElement) document.exitFullscreen();
         selectedIndices.clear();
         document.getElementById('quoteOverlay').style.display = 'none';
         filterTable();
@@ -253,31 +283,16 @@
 
     function toggleFullScreen() {
         const elem = document.getElementById("quoteModalContainer");
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            if (elem.requestFullscreen) { elem.requestFullscreen(); }
-            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+        if (!document.fullscreenElement) {
+            if (elem.requestFullscreen) elem.requestFullscreen();
         } else {
-            if (document.exitFullscreen) { document.exitFullscreen(); }
-            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            document.exitFullscreen();
         }
-    }
-
-    // --- Search & Utils ---
-    function handleSearch() {
-        const val = document.getElementById('searchBox').value;
-        document.getElementById('clearSearch').style.display = val.length > 0 ? "block" : "none";
-        filterTable();
     }
 
     function clearSearchInput() {
         document.getElementById('searchBox').value = "";
-        handleSearch();
-    }
-
-    function filterTable() {
-        const q = document.getElementById('searchBox').value.toLowerCase();
-        const filtered = masterData.filter(i => i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q));
-        renderTable(filtered);
+        filterTable();
     }
 
     function toggleStock() {
