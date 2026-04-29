@@ -10,7 +10,6 @@
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
-        /* Weather Section */
         .weather-wrap { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .weather-card { flex: 1; min-width: 280px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .weather-title { font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px; font-size: 14px; }
@@ -19,7 +18,6 @@
         .day-item b { display: block; font-size: 11px; color: #666; }
         .temp { font-weight: bold; color: #ff5722; display: block; }
 
-        /* Action Bar */
         .action-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         .search-wrapper { position: relative; flex: 2; min-width: 200px; }
         #searchBox { width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
@@ -43,7 +41,6 @@
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
 
-        /* Modal Báo giá */
         .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
         .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
         .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
@@ -55,7 +52,6 @@
         .btn-zalo { background: var(--zalo); color: white; }
 
         #quoteModalContainer:fullscreen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
-
         @media print { .no-print { display: none; } }
     </style>
 </head>
@@ -109,7 +105,7 @@
                     <tr>
                         <th>Tên sản phẩm</th>
                         <th style="text-align:right">Đơn giá</th>
-                        <th>Ghi chú / KM</th>
+                        <th>Khuyến mãi</th>
                     </tr>
                 </thead>
                 <tbody id="quoteBody"></tbody>
@@ -249,6 +245,9 @@
         if (selectedIndices.has(id)) selectedIndices.delete(id);
         else selectedIndices.add(id);
         document.getElementById('selectedCount').innerText = selectedIndices.size;
+        
+        const rows = document.querySelectorAll('#tableBody tr');
+        filterTable();
     }
 
     function showQuote() {
@@ -257,7 +256,7 @@
         
         document.getElementById('quoteBody').innerHTML = items.map(i => `
             <tr>
-                <td><b>${i.ten}</b><br><small style="color:#666">${i.ma}</small></td>
+                <td><b>${i.ten}</b></td>
                 <td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td>
                 <td style="font-size:12px; color:var(--success)">${i.km !== "-" ? i.km : ""}</td>
             </tr>
@@ -267,7 +266,6 @@
         document.getElementById('quoteOverlay').style.display = 'flex';
     }
 
-    // --- TÍNH NĂNG MỚI: COPY CHO ZALO ---
     function copyToZalo() {
         const items = masterData.filter(i => selectedIndices.has(i.id));
         if (items.length === 0) return;
@@ -276,10 +274,9 @@
         
         items.forEach((item, index) => {
             text += `${index + 1}. ${item.ten.toUpperCase()}\n`;
-            text += `   - Mã: ${item.ma}\n`;
-            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
+            text += `   - Giá bán: ${item.gia.toLocaleString('vi-VN')}đ\n`;
             if (item.km !== "-") {
-                text += `   - KM: ${item.km}\n`;
+                text += `   - Khuyến mãi: ${item.km}\n`;
             }
             text += `--------------------------\n`;
         });
@@ -287,8 +284,7 @@
         navigator.clipboard.writeText(text).then(() => {
             alert("Đã copy danh sách báo giá! Bạn có thể dán (Ctrl+V) vào Zalo ngay.");
         }).catch(err => {
-            console.error('Lỗi khi copy: ', err);
-            alert("Không thể copy tự động. Vui lòng kiểm tra quyền trình duyệt.");
+            alert("Lỗi copy! Hãy cấp quyền truy cập Clipboard cho trình duyệt.");
         });
     }
 
