@@ -27,6 +27,8 @@
 
         button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
         .btn-quote { background: var(--warning); color: #fff; }
+        .btn-select-all { background: #5a6268; }
+        .btn-deselect-all { background: #bdc3c7; color: #333; }
         
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
@@ -71,6 +73,9 @@
         <select id="filterKM" onchange="filterTable()">
             <option value="">-- Tất cả chương trình --</option>
         </select>
+        
+        <button class="btn-select-all" onclick="selectAllVisible()">CHỌN TẤT CẢ</button>
+        <button class="btn-deselect-all" onclick="deselectAll()">BỎ CHỌN TẤT CẢ</button>
 
         <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
         <button class="btn-quote" onclick="showQuote()">TẠO BÁO GIÁ (<span id="selectedCount">0</span>)</button>
@@ -124,6 +129,7 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
 
     let masterData = [];
+    let filteredData = []; // Danh sách sau khi lọc để phục vụ nút Chọn tất cả
     let isHidden = false;
     let selectedIndices = new Set(); 
 
@@ -233,12 +239,24 @@
         
         document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
 
-        const filtered = masterData.filter(i => {
+        filteredData = masterData.filter(i => {
             const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q);
             const matchKM = kmFilter === "" || i.km === kmFilter;
             return matchSearch && matchKM;
         });
-        renderTable(filtered);
+        renderTable(filteredData);
+    }
+
+    // --- CÁC HÀM CHỌN MỚI ---
+    function selectAllVisible() {
+        if (filteredData.length === 0) return;
+        filteredData.forEach(item => selectedIndices.add(item.id));
+        renderTable(filteredData);
+    }
+
+    function deselectAll() {
+        selectedIndices.clear();
+        renderTable(filteredData);
     }
 
     function toggleSelect(id) {
@@ -246,8 +264,8 @@
         else selectedIndices.add(id);
         document.getElementById('selectedCount').innerText = selectedIndices.size;
         
-        const rows = document.querySelectorAll('#tableBody tr');
-        filterTable();
+        // Cập nhật lại màu dòng nhanh
+        renderTable(filteredData);
     }
 
     function showQuote() {
@@ -282,9 +300,9 @@
         });
 
         navigator.clipboard.writeText(text).then(() => {
-            alert("Đã copy danh sách báo giá! Bạn có thể dán (Ctrl+V) vào Zalo ngay.");
+            alert("Đã copy danh sách báo giá! Bạn có thể dán vào Zalo ngay.");
         }).catch(err => {
-            alert("Lỗi copy! Hãy cấp quyền truy cập Clipboard cho trình duyệt.");
+            alert("Lỗi copy! Hãy cấp quyền truy cập Clipboard.");
         });
     }
 
@@ -310,7 +328,7 @@
     function toggleStock() {
         isHidden = !isHidden;
         document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN";
-        filterTable();
+        renderTable(filteredData);
     }
 </script>
 </body>
