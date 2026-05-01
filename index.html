@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V8.0 - Việt Tuấn (Price Color Edition)</title>
+    <title>Bravo Sync V8.1 - Việt Tuấn (Zebra Stripes Edition)</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --combo: #e67e22; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
@@ -34,11 +34,17 @@
         .btn-toggle-select { background: #5a6268; min-width: 130px; }
         .btn-toggle-select.active { background: #bdc3c7; color: #333; }
         
-        /* Table Style */
+        /* Table Style & Zebra Stripes */
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 850px; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
+        
+        /* TÍNH NĂNG XEN KẼ MÀU */
+        tbody tr:nth-child(even) { background-color: #fcfcfc; }
+        tbody tr:nth-child(odd) { background-color: #ffffff; }
+        tbody tr:hover { background-color: #f1f4f9 !important; } /* Hiệu ứng hover nhẹ khi rê chuột qua */
+        
         .selected-row { background-color: #fff9c4 !important; }
         .ma-sp { color: #999; font-size: 11px; display: block; font-family: monospace; }
         .specs-text { font-size: 11px; color: #666; margin-top: 4px; font-style: italic; line-height: 1.4; display: block; max-width: 450px; }
@@ -101,7 +107,7 @@
     </div>
 </div>
 
-<!-- Modal Báo Giá -->
+<!-- Modal Báo Giá Lẻ -->
 <div id="quoteOverlay" class="quote-overlay">
     <div class="quote-modal" id="quoteModalContainer">
         <div class="quote-header">
@@ -154,11 +160,10 @@
     let filteredData = [];
     let isHidden = false;
     let selectedIndices = new Set(); 
-    let priceGroups = {}; // Để theo dõi các mức giá theo mã hàng
+    let priceGroups = {}; 
 
     window.onload = () => { loadData(); loadWeather(); };
 
-    // Weather Logic
     function getWeatherDesc(code) {
         const mapping = {0:"☀️ Trời nắng",1:"🌤️ Ít mây",2:"⛅ Mây rải rác",3:"☁️ Nhiều mây",45:"🌫️ Sương mù",51:"🌦️ Mưa phùn",61:"🌧️ Mưa nhỏ",63:"🌧️ Mưa vừa",80:"⛈️ Mưa rào",95:"🌩️ Có dông"};
         return mapping[code] || "🌤️ Bình thường";
@@ -220,7 +225,7 @@
             specRows.forEach(cols => { if (cols[0]) specMap[cols[0]] = cols[2]; });
             
             masterData = [];
-            priceGroups = {}; // Reset groups
+            priceGroups = {}; 
 
             priceRows.forEach((cols) => {
                 const ma = cols[0];
@@ -235,17 +240,12 @@
                         thongSo: specMap[ma] || "Thông số đang cập nhật..."
                     };
                     masterData.push(item);
-
-                    // Nhóm giá theo mã hàng
                     if (!priceGroups[ma]) priceGroups[ma] = [];
                     if (!priceGroups[ma].includes(gia)) priceGroups[ma].push(gia);
                 }
             });
 
-            // Sắp xếp các mức giá trong nhóm để xác định min/max
-            Object.keys(priceGroups).forEach(ma => {
-                priceGroups[ma].sort((a, b) => a - b);
-            });
+            Object.keys(priceGroups).forEach(ma => { priceGroups[ma].sort((a, b) => a - b); });
 
             updateKMList(masterData);
             filterTable();
@@ -255,13 +255,11 @@
     function getPriceClass(ma, gia) {
         const group = priceGroups[ma];
         if (!group || group.length <= 1) return "price-normal";
-        
         const min = group[0];
         const max = group[group.length - 1];
-
-        if (gia === max) return "price-high"; // Cao nhất -> Đỏ
-        if (gia === min) return "price-low";  // Thấp nhất -> Xanh
-        return "price-mid"; // Ở giữa -> Vàng
+        if (gia === max) return "price-high";
+        if (gia === min) return "price-low";
+        return "price-mid";
     }
 
     function updateKMList(data) {
