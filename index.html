@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V8.3 - Việt Tuấn (5-Day Weather Edition)</title>
+    <title>Bravo Sync V8.4 - Việt Tuấn (Combo with Price)</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --combo: #e67e22; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
-        /* Weather Section - Tối ưu cho 5 ngày */
+        /* Weather Section */
         .weather-wrap { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .weather-card { flex: 1; min-width: 350px; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .weather-title { font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px; font-size: 14px; }
@@ -33,14 +33,14 @@
         .btn-toggle-select { background: #5a6268; min-width: 130px; }
         .btn-toggle-select.active { background: #bdc3c7; color: #333; }
         
-        /* Table Styles & Group Coloring */
+        /* Table Styles */
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 850px; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle; }
         
         .row-white { background-color: #ffffff; }
-        .row-gray { background-color: #f2f2f2; } /* Xám nhẹ để phân biệt cụm mã */
+        .row-gray { background-color: #f2f2f2; }
         .selected-row { background-color: #fff9c4 !important; }
         tr:hover { filter: brightness(0.97); }
 
@@ -127,7 +127,6 @@
         return mapping[code] || "🌤️ Bình thường";
     }
 
-    // Tăng dự báo lên 5 ngày
     async function fetchWeather(lat, lon, name) {
         try {
             const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
@@ -258,8 +257,45 @@
     function updateKMList(data) { const filterKM = document.getElementById('filterKM'); const kmSet = new Set(); data.forEach(item => { if (item.km && item.km !== "-") kmSet.add(item.km); }); let html = '<option value="">-- Tất cả chương trình --</option>'; Array.from(kmSet).sort().forEach(km => { html += `<option value="${km}">${km}</option>`; }); filterKM.innerHTML = html; }
     function showQuote() { if (selectedIndices.size === 0) return alert("Chọn SP!"); const items = masterData.filter(i => selectedIndices.has(i.id)); document.getElementById('quoteBody').innerHTML = items.map(i => `<tr><td style="padding:10px;"><b>${i.ten}</b><div style="font-size:11px;color:#666">${i.thongSo}</div></td><td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td></tr>`).join(''); document.getElementById('quoteDate').innerText = "Ngày: " + new Date().toLocaleString('vi-VN'); document.getElementById('quoteOverlay').style.display = 'flex'; }
     function copyToZalo() { const items = masterData.filter(i => selectedIndices.has(i.id)); let text = `📣 BÁO GIÁ VIỆT TUẤN - ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`; items.forEach((item, index) => { text += `${index + 1}. ${item.ten.toUpperCase()}\n   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; }); navigator.clipboard.writeText(text).then(() => alert("Đã copy!")); }
-    function openComboModal() { const items = masterData.filter(i => selectedIndices.has(i.id)); document.getElementById('comboItemsList').innerHTML = items.map(item => `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span style="font-size:12px;">${item.ten}</span><input type="number" class="combo-qty" data-id="${item.id}" value="1" min="1" style="width:45px;"></div>`).join(''); document.getElementById('comboOverlay').style.display = 'flex'; }
-    function generateComboZalo() { const name = document.getElementById('comboName').value || "COMBO HOT"; const items = masterData.filter(i => selectedIndices.has(i.id)); const qtyInputs = document.querySelectorAll('.combo-qty'); let total = 0; let text = `🔥 ${name.toUpperCase()} 🔥\n--------------------------\n`; items.forEach((item, index) => { const qty = parseInt(Array.from(qtyInputs).find(input => input.dataset.id == item.id).value) || 1; total += item.gia * qty; text += `${index + 1}. ${item.ten} (x${qty})\n`; }); text += `--------------------------\n💰 TỔNG: ${total.toLocaleString('vi-VN')}đ\n🚀 Việt Tuấn hỗ trợ giao hàng tận nơi!`; navigator.clipboard.writeText(text).then(() => { alert("Đã copy Combo!"); closeModal('comboOverlay'); }); }
+    
+    function openComboModal() { 
+        const items = masterData.filter(i => selectedIndices.has(i.id)); 
+        document.getElementById('comboItemsList').innerHTML = items.map(item => `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-size:12px;">${item.ten}</span>
+                <input type="number" class="combo-qty" data-id="${item.id}" value="1" min="1" style="width:45px;">
+            </div>`).join(''); 
+        document.getElementById('comboOverlay').style.display = 'flex'; 
+    }
+    
+    function generateComboZalo() { 
+        const name = document.getElementById('comboName').value || "COMBO HOT"; 
+        const items = masterData.filter(i => selectedIndices.has(i.id)); 
+        const qtyInputs = document.querySelectorAll('.combo-qty'); 
+        let total = 0; 
+        let text = `🔥 ${name.toUpperCase()} 🔥\n`;
+        text += `📅 Ngày: ${new Date().toLocaleDateString('vi-VN')}\n`;
+        text += `--------------------------\n`; 
+        
+        items.forEach((item, index) => { 
+            const qtyInput = Array.from(qtyInputs).find(input => input.dataset.id == item.id);
+            const qty = parseInt(qtyInput.value) || 1; 
+            total += item.gia * qty; 
+            
+            text += `${index + 1}. ${item.ten} (x${qty})\n`; 
+            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; // Đã thêm giá từng mặt hàng vào đây
+        }); 
+        
+        text += `--------------------------\n`;
+        text += `💰 TỔNG TIỀN GÓI: ${total.toLocaleString('vi-VN')}đ\n`; 
+        text += `🚀 Việt Tuấn hỗ trợ giao hàng tận nơi!`; 
+        
+        navigator.clipboard.writeText(text).then(() => { 
+            alert("Đã copy Combo kèm đơn giá sản phẩm!"); 
+            closeModal('comboOverlay'); 
+        }); 
+    }
+    
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function clearSearchInput() { document.getElementById('searchBox').value = ""; filterTable(); }
 </script>
