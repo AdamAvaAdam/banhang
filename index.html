@@ -3,68 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V9.2 - Việt Tuấn Fixed</title>
+    <title>Bravo Sync V9.0 - Việt Tuấn Professional</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --combo: #e67e22; --bg: #f4f6f9; --zalo: #0068ff; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', Tahoma, system-ui, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
+        /* Weather Section */
         .weather-wrap { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .weather-card { flex: 1; min-width: 320px; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .weather-title { font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px; font-size: 14px; }
         .weather-days { display: flex; justify-content: space-between; gap: 5px; }
         .day-item { text-align: center; flex: 1; font-size: 10px; }
+        .day-item b { display: block; font-size: 11px; color: #666; }
+        .w-desc { font-size: 9px; color: #555; height: 24px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; }
         .temp { font-weight: bold; color: #ff5722; display: block; }
 
+        /* Action Bar */
         .action-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         .search-wrapper { position: relative; flex: 2; min-width: 200px; }
         #searchBox { width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; outline: none; box-sizing: border-box; }
+        #clearSearch { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #999; cursor: pointer; display: none; }
         #filterKM { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; flex: 1; min-width: 180px; color: var(--primary); font-weight: 500; }
 
         button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; transition: 0.2s; }
         .btn-quote { background: var(--warning); }
         .btn-combo { background: var(--combo); }
+        .btn-toggle-select.active { background: #bdc3c7; color: #333; }
         
+        /* Table Styles */
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 850px; }
-        th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 11px; border-bottom: 2px solid #eee; color: #666; }
-        td { padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+        th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle; }
         
+        .row-white { background-color: #ffffff; }
         .row-gray { background-color: #f7f7f7; }
         .selected-row { background-color: #fff9c4 !important; }
-        .ma-sp { color: #999; font-size: 10px; display: block; font-family: monospace; }
-        .specs-text { font-size: 10px; color: #666; margin-top: 2px; font-style: italic; display: block; line-height: 1.2; }
+        .ma-sp { color: #999; font-size: 11px; display: block; font-family: monospace; }
+        .specs-text { font-size: 11px; color: #666; margin-top: 4px; font-style: italic; line-height: 1.4; display: block; max-width: 450px; }
         
         .price-high { color: var(--danger); font-weight: bold; }
         .price-low { color: var(--success); font-weight: bold; }
         .price-mid { color: #f39c12; font-weight: bold; }
 
+        /* Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 95%; max-width: 550px; padding: 20px; border-radius: 12px; max-height: 85vh; overflow-y: auto; }
-        .btn-zalo { background: var(--zalo); color: white; width: 100%; padding: 12px; font-size: 15px; margin-top: 10px; }
+        .modal-content { background: white; width: 95%; max-width: 600px; padding: 20px; border-radius: 12px; max-height: 90vh; overflow-y: auto; }
+        .btn-zalo { background: var(--zalo); color: white; width: 100%; padding: 15px; font-size: 16px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header"><h3 style="margin:0">HỆ THỐNG TRA CỨU - VIỆT TUẤN V9.2</h3></div>
+<div class="header"><h3 style="margin:0">HỆ THỐNG TRA CỨU & BÁO GIÁ - VIỆT TUẤN</h3></div>
 <div class="container">
     <div class="weather-wrap" id="weatherContent"></div>
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm kiếm..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Tìm tên, mã hoặc thông số..." onkeyup="filterTable()">
+            <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
         </div>
-        <select id="filterKM" onchange="filterTable()"><option value="">-- Chương trình --</option></select>
-        <button onclick="handleToggleSelect()">CHỌN TẤT CẢ</button>
+        <select id="filterKM" onchange="filterTable()"><option value="">-- Tất cả chương trình --</option></select>
+        <button id="btnToggleAll" onclick="handleToggleSelect()">CHỌN TẤT CẢ</button>
         <button onclick="toggleStock()" id="btnHide">ẨN TỒN</button>
         <button class="btn-quote" onclick="showQuote()">BÁO GIÁ LẺ (<span id="selectedCount">0</span>)</button>
-        <button class="btn-combo" id="btnCombo" onclick="openComboModal()" style="display: none;">TẠO COMBO</button>
+        <button class="btn-combo" id="btnCombo" onclick="openComboModal()" style="display: none;">TẠO COMBO HOT</button>
         <button onclick="loadData()" style="background: var(--success);">LÀM MỚI</button>
     </div>
     <div class="table-res">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 30px; text-align:center;">✓</th>
+                    <th style="width: 40px; text-align:center;">✓</th>
                     <th style="width: 45%;">SẢN PHẨM & THÔNG SỐ</th>
                     <th style="width: 10%; text-align:center;">TỒN</th>
                     <th style="width: 15%;">GIÁ BÁN</th>
@@ -76,27 +87,29 @@
     </div>
 </div>
 
+<!-- Modal Báo Giá -->
 <div id="quoteOverlay" class="modal-overlay">
     <div class="modal-content">
-        <h3 style="margin-top:0; color: var(--primary);">BÁO GIÁ CHI TIẾT</h3>
-        <div id="quoteBody" style="border-top: 1px solid #eee;"></div>
+        <h3 style="margin-top:0; color: var(--primary);">XEM TRƯỚC BÁO GIÁ</h3>
+        <div id="quoteBody" style="border-top: 1px solid #eee; margin-bottom: 15px;"></div>
         <button onclick="copyToZalo('single')" class="btn-zalo">COPY GỬI ZALO</button>
         <button onclick="closeModal('quoteOverlay')" style="background:#666; width:100%; margin-top:5px;">ĐÓNG</button>
     </div>
 </div>
 
+<!-- Modal Combo -->
 <div id="comboOverlay" class="modal-overlay">
     <div class="modal-content">
         <h3 style="margin-top:0; color: var(--combo);">THIẾT LẬP COMBO</h3>
-        <input type="text" id="comboName" placeholder="Tên Combo..." style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
-        <div id="comboItemsList" style="max-height:250px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:4px;"></div>
+        <input type="text" id="comboName" placeholder="Tên Combo (VD: COMBO PHÒNG GIẶT)" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px; box-sizing: border-box;">
+        <div id="comboItemsList" style="margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 4px;"></div>
         <button onclick="copyToZalo('combo')" class="btn-zalo">COPY COMBO GỬI ZALO</button>
         <button onclick="closeModal('comboOverlay')" style="background:#666; width:100%; margin-top:5px;">HỦY</button>
     </div>
 </div>
 
 <script>
-    // GIỮ NGUYÊN LINK GỐC CỦA BẠN
+    // GIỮ NGUYÊN ĐẦU VÀO CỦA BẠN
     const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
@@ -105,30 +118,23 @@
 
     window.onload = () => { loadData(); loadWeather(); };
 
-    // HÀM PARSE CSV SIÊU CHUẨN ĐỂ KHÔNG MẤT HÀNG
-    function parseCSV(text) {
-        const result = [];
-        const lines = text.split(/\r?\n/);
-        for (let line of lines) {
-            if (!line.trim()) continue;
-            const cells = [];
-            let cell = '';
-            let inQuote = false;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') inQuote = !inQuote;
-                else if (char === ',' && !inQuote) { cells.push(cell.trim()); cell = ''; }
-                else cell += char;
+    function parseCSV(t) {
+        const rows = []; let curr = '', inQ = false;
+        t.split(/\r?\n/).filter(l => l.trim()).forEach(line => {
+            let r = []; curr = ''; inQ = false;
+            for (let i=0; i<line.length; i++) {
+                if (line[i] === '"') inQ = !inQ;
+                else if (line[i] === ',' && !inQ) { r.push(curr.trim()); curr = ''; }
+                else curr += line[i];
             }
-            cells.push(cell.trim());
-            result.push(cells);
-        }
-        return result;
+            r.push(curr.trim()); rows.push(r);
+        });
+        return rows;
     }
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px">Đang tải dữ liệu Việt Tuấn...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ hệ thống...</td></tr>';
         try {
             const [sText, pText, spText] = await Promise.all([
                 fetch(URL_STOCK + "&c=" + Date.now()).then(r => r.text()),
@@ -137,37 +143,23 @@
             ]);
 
             const sRows = parseCSV(sText), pRows = parseCSV(pText), spRows = parseCSV(spText);
+            const sMap = Object.fromEntries(sRows.filter(r => r[0] !== "Mã").map(r => [r[0], r[3]]));
+            const spMap = Object.fromEntries(spRows.map(r => [r[0], r[2]]));
             
-            // Map Tồn kho (Cột A: Mã, Cột D: Tồn)
-            const sMap = {};
-            sRows.forEach(r => { if(r[0] && r[0] !== "Mã") sMap[r[0]] = r[3]; });
-
-            // Map Thông số (Cột A: Mã, Cột C: Thông số)
-            const spMap = {};
-            spRows.forEach(r => { if(r[0]) spMap[r[0]] = r[2]; });
-
             masterData = []; priceGroups = {};
-            // Duyệt bảng giá (Cột A: Mã, Cột B: Tên, Cột F: Giá, Cột I: Khuyến mãi)
             pRows.forEach((r, idx) => {
                 if (idx === 0 || !r[0]) return;
-                const ma = r[0];
-                const gia = parseInt(r[5]?.replace(/[^0-9]/g, '') || "0");
+                const ma = r[0], gia = parseInt(r[5]?.replace(/[^0-9]/g, '') || "0");
                 const ton = parseInt(sMap[ma] || "0");
-                const km = r[8] || "-";
-
-                // Chỉ lấy hàng có giá và còn tồn
                 if (gia > 0 && ton > 0) {
-                    masterData.push({ id: masterData.length, ma, ten: r[1], ton, gia, km, thongSo: spMap[ma] || "Chưa có thông số" });
+                    masterData.push({ id: masterData.length, ma, ten: r[1], ton, gia, km: r[8] || "-", thongSo: spMap[ma] || "Chưa có thông số" });
                     if (!priceGroups[ma]) priceGroups[ma] = [];
                     if (!priceGroups[ma].includes(gia)) priceGroups[ma].push(gia);
                 }
             });
             Object.values(priceGroups).forEach(g => g.sort((a,b) => a-b));
             updateKMFilter(); filterTable();
-        } catch (e) { 
-            console.error(e);
-            tbody.innerHTML = '<tr><td colspan="5">Lỗi đồng bộ! Hãy kiểm tra quyền chia sẻ file CSV.</td></tr>'; 
-        }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi đồng bộ dữ liệu!</td></tr>'; }
     }
 
     function renderTable(data) {
@@ -184,7 +176,7 @@
                 <td style="font-size:12px;color:var(--success)">${item.km==='-'?'':item.km}</td>
             </tr>`;
         });
-        tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;padding:20px">Không có sản phẩm nào phù hợp.</td></tr>';
+        tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;padding:20px">Không tìm thấy sản phẩm.</td></tr>';
         updateUI();
     }
 
@@ -193,21 +185,21 @@
         return g === gr[gr.length-1] ? "price-high" : (g === gr[0] ? "price-low" : "price-mid");
     }
 
-    function toggleSelect(id) { 
-        if(selectedIndices.has(id)) selectedIndices.delete(id); 
-        else selectedIndices.add(id); 
-        renderTable(filteredData); 
-    }
+    function toggleSelect(id) { selectedIndices.has(id) ? selectedIndices.delete(id) : selectedIndices.add(id); renderTable(filteredData); }
     
     function updateUI() {
         const c = selectedIndices.size;
         document.getElementById('selectedCount').innerText = c;
         document.getElementById('btnCombo').style.display = c >= 2 ? 'inline-block' : 'none';
+        const btnAll = document.getElementById('btnToggleAll');
+        btnAll.innerText = (c > 0 && c === filteredData.length) ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
+        btnAll.className = (c > 0 && c === filteredData.length) ? "active" : "";
     }
 
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
         const km = document.getElementById('filterKM').value;
+        document.getElementById('clearSearch').style.display = q ? 'block' : 'none';
         filteredData = masterData.filter(i => (i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q)) && (km==="" || i.km===km));
         renderTable(filteredData);
     }
@@ -216,33 +208,34 @@
         const items = masterData.filter(i => selectedIndices.has(i.id));
         const date = new Date().toLocaleDateString('vi-VN');
         let text = "";
+
         if (type === 'single') {
             text = `📣 BÁO GIÁ VIỆT TUẤN - ${date}\n--------------------------\n`;
             items.forEach((it, idx) => {
                 text += `${idx + 1}. ${it.ten.toUpperCase()}\n   - Giá: ${it.gia.toLocaleString('vi-VN')}đ\n`;
-                if (it.km !== "-") text += `   - Chương trình: ${it.km}\n`;
+                if (it.km !== "-") text += `   - KM: ${it.km}\n`;
             });
         } else {
             const name = document.getElementById('comboName').value || "COMBO HOT";
             let total = 0;
             text = `🔥 ${name.toUpperCase()} 🔥\n📅 Ngày: ${date}\n--------------------------\n`;
             items.forEach((it, idx) => {
-                const q = parseInt(document.querySelector(`.combo-qty[data-id="${it.id}"]`).value) || 1;
-                total += it.gia * q;
-                text += `${idx + 1}. ${it.ten} (x${q})\n   - Giá: ${it.gia.toLocaleString('vi-VN')}đ\n`;
+                const qty = parseInt(document.querySelector(`.combo-qty[data-id="${it.id}"]`).value) || 1;
+                total += it.gia * qty;
+                text += `${idx + 1}. ${it.ten} (x${qty})\n   - Giá: ${it.gia.toLocaleString('vi-VN')}đ\n`;
             });
             text += `--------------------------\n💰 TỔNG TIỀN GÓI: ${total.toLocaleString('vi-VN')}đ\n`;
         }
         text += `🚀 Việt Tuấn hỗ trợ giao hàng tận nơi!`;
-        navigator.clipboard.writeText(text).then(() => alert("Đã copy báo giá!"));
+        navigator.clipboard.writeText(text).then(() => alert("Đã copy nội dung!"));
     }
 
     function showQuote() {
         if (!selectedIndices.size) return alert("Chọn SP!");
         const items = masterData.filter(i => selectedIndices.has(i.id));
         document.getElementById('quoteBody').innerHTML = items.map(i => `
-            <div style="padding:8px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-                <div style="font-size:12px;"><b>${i.ten}</b></div>
+            <div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:13px;"><b>${i.ten}</b><br><small style="color:var(--success)">${i.km==='-'?'':i.km}</small></div>
                 <b style="color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</b>
             </div>`).join('');
         document.getElementById('quoteOverlay').style.display = 'flex';
@@ -251,9 +244,9 @@
     function openComboModal() {
         const items = masterData.filter(i => selectedIndices.has(i.id));
         document.getElementById('comboItemsList').innerHTML = items.map(it => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
                 <span style="font-size:12px; flex:1;">${it.ten}</span>
-                <input type="number" class="combo-qty" data-id="${it.id}" value="1" min="1" style="width:50px; height:25px;">
+                <input type="number" class="combo-qty" data-id="${it.id}" value="1" min="1" style="width:50px; text-align:center;">
             </div>`).join('');
         document.getElementById('comboOverlay').style.display = 'flex';
     }
@@ -266,7 +259,7 @@
 
     function updateKMFilter() {
         const kmSet = new Set(masterData.map(i => i.km).filter(k => k !== "-"));
-        let html = '<option value="">-- Chương trình --</option>';
+        let html = '<option value="">-- Tất cả chương trình --</option>';
         Array.from(kmSet).sort().forEach(k => html += `<option value="${k}">${k}</option>`);
         document.getElementById('filterKM').innerHTML = html;
     }
@@ -290,6 +283,7 @@
 
     function toggleStock() { isHidden = !isHidden; document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN"; renderTable(filteredData); }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function clearSearchInput() { document.getElementById('searchBox').value = ""; filterTable(); }
 </script>
 </body>
 </html>
