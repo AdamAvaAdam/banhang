@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V8.4 - Việt Tuấn (Combo with Price)</title>
+    <title>Bravo Sync V8.5 - Việt Tuấn Professional</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --combo: #e67e22; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
@@ -255,8 +255,42 @@
 
     function toggleStock() { isHidden = !isHidden; document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN"; renderTable(filteredData); }
     function updateKMList(data) { const filterKM = document.getElementById('filterKM'); const kmSet = new Set(); data.forEach(item => { if (item.km && item.km !== "-") kmSet.add(item.km); }); let html = '<option value="">-- Tất cả chương trình --</option>'; Array.from(kmSet).sort().forEach(km => { html += `<option value="${km}">${km}</option>`; }); filterKM.innerHTML = html; }
-    function showQuote() { if (selectedIndices.size === 0) return alert("Chọn SP!"); const items = masterData.filter(i => selectedIndices.has(i.id)); document.getElementById('quoteBody').innerHTML = items.map(i => `<tr><td style="padding:10px;"><b>${i.ten}</b><div style="font-size:11px;color:#666">${i.thongSo}</div></td><td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td></tr>`).join(''); document.getElementById('quoteDate').innerText = "Ngày: " + new Date().toLocaleString('vi-VN'); document.getElementById('quoteOverlay').style.display = 'flex'; }
-    function copyToZalo() { const items = masterData.filter(i => selectedIndices.has(i.id)); let text = `📣 BÁO GIÁ VIỆT TUẤN - ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`; items.forEach((item, index) => { text += `${index + 1}. ${item.ten.toUpperCase()}\n   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; }); navigator.clipboard.writeText(text).then(() => alert("Đã copy!")); }
+    
+    function showQuote() { 
+        if (selectedIndices.size === 0) return alert("Chọn SP!"); 
+        const items = masterData.filter(i => selectedIndices.has(i.id)); 
+        document.getElementById('quoteBody').innerHTML = items.map(i => `
+            <tr>
+                <td style="padding:10px;">
+                    <b>${i.ten}</b>
+                    <div style="font-size:11px;color:#666">${i.thongSo}</div>
+                </td>
+                <td style="text-align:right; font-weight:bold; color:var(--danger)">
+                    ${i.gia.toLocaleString('vi-VN')}đ
+                </td>
+                <td style="font-size:12px; color:var(--success)">
+                    ${i.km !== "-" ? i.km : ""}
+                </td>
+            </tr>`).join(''); 
+        document.getElementById('quoteDate').innerText = "Ngày: " + new Date().toLocaleString('vi-VN'); 
+        document.getElementById('quoteOverlay').style.display = 'flex'; 
+    }
+    
+    function copyToZalo() { 
+        const items = masterData.filter(i => selectedIndices.has(i.id)); 
+        let text = `📣 BÁO GIÁ VIỆT TUẤN - ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`; 
+        
+        items.forEach((item, index) => { 
+            text += `${index + 1}. ${item.ten.toUpperCase()}\n`; 
+            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; 
+            if (item.km !== "-") {
+                text += `   - Chương trình: ${item.km}\n`; // Đã thêm chương trình khuyến mãi vào báo giá lẻ
+            }
+        }); 
+        
+        text += `--------------------------\n🚀 Việt Tuấn hỗ trợ giao hàng tận nơi!`;
+        navigator.clipboard.writeText(text).then(() => alert("Đã copy báo giá lẻ kèm khuyến mãi!")); 
+    }
     
     function openComboModal() { 
         const items = masterData.filter(i => selectedIndices.has(i.id)); 
@@ -283,7 +317,7 @@
             total += item.gia * qty; 
             
             text += `${index + 1}. ${item.ten} (x${qty})\n`; 
-            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; // Đã thêm giá từng mặt hàng vào đây
+            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
         }); 
         
         text += `--------------------------\n`;
