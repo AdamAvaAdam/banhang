@@ -59,6 +59,30 @@
     <div class="weather-wrap" id="weatherContent"></div>
 
     <div class="action-bar">
+        <!-- Thêm vào Action Bar -->
+<button class="btn-combo" id="btnCombo" onclick="openComboModal()" style="background: #e67e22; display: none;">TẠO COMBO HOT</button>
+
+<!-- Modal nhập thông tin Combo -->
+<div id="comboOverlay" class="quote-overlay">
+    <div class="quote-modal" style="max-width: 500px;">
+        <div class="quote-header">
+            <h3 style="margin:0; color: #e67e22;">THIẾT LẬP COMBO HOT</h3>
+        </div>
+        <div style="padding: 15px;">
+            <label>Tên chương trình Combo:</label>
+            <input type="text" id="comboName" placeholder="Ví dụ: COMBO PHÒNG GIẶT THÔNG MINH" style="width:100%; padding:10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
+            
+            <div id="comboItemsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                <!-- Danh sách sản phẩm kèm ô nhập số lượng sẽ hiện ở đây -->
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeCombo()" style="background:#666; flex:1">HỦY</button>
+                <button onclick="generateComboZalo()" class="btn-zalo" style="flex:2">COPY COMBO GỬI ZALO</button>
+            </div>
+        </div>
+    </div>
+</div>
         <div class="search-wrapper">
             <input type="text" id="searchBox" placeholder="Tìm tên, mã hoặc thông số..." onkeyup="filterTable()">
             <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
@@ -128,6 +152,70 @@
     let selectedIndices = new Set(); 
 
     window.onload = () => { loadData(); loadWeather(); };
+    // Cập nhật hàm updateSelectionUI để hiện/ẩn nút Combo
+function updateSelectionUI() {
+    const count = selectedIndices.size;
+    document.getElementById('selectedCount').innerText = count;
+    
+    // Hiện nút Combo nếu chọn từ 2 sản phẩm trở lên
+    document.getElementById('btnCombo').style.display = count >= 2 ? 'inline-block' : 'none';
+
+    const btn = document.getElementById('btnToggleAll');
+    if (count > 0 && count === filteredData.length) {
+        btn.innerText = "BỎ CHỌN TẤT CẢ";
+        btn.classList.add('active');
+    } else {
+        btn.innerText = "CHỌN TẤT CẢ";
+        btn.classList.remove('active');
+    }
+}
+
+function openComboModal() {
+    const items = masterData.filter(i => selectedIndices.has(i.id));
+    const listArea = document.getElementById('comboItemsList');
+    
+    listArea.innerHTML = items.map(item => `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px;">
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px;">${item.ten}</span>
+            <input type="number" class="combo-qty" data-id="${item.id}" value="1" min="1" style="width: 50px; padding: 5px; border: 1px solid #ddd;">
+        </div>
+    `).join('');
+    
+    document.getElementById('comboOverlay').style.display = 'flex';
+}
+
+function generateComboZalo() {
+    const comboName = document.getElementById('comboName').value || "COMBO SIÊU HOT";
+    const items = masterData.filter(i => selectedIndices.has(i.id));
+    const qtyInputs = document.querySelectorAll('.combo-qty');
+    
+    let totalComboPrice = 0;
+    let text = `🔥 ${comboName.toUpperCase()} 🔥\n`;
+    text += `📅 Áp dụng từ: ${new Date().toLocaleDateString('vi-VN')}\n`;
+    text += `--------------------------\n`;
+
+    items.forEach((item, index) => {
+        const qty = parseInt(Array.from(qtyInputs).find(input => input.dataset.id == item.id).value) || 1;
+        const linePrice = item.gia * qty;
+        totalComboPrice += linePrice;
+        
+        text += `${index + 1}. ${item.ten} (x${qty})\n`;
+    });
+
+    text += `--------------------------\n`;
+    text += `💰 TỔNG GIÁ COMBO: ${totalComboPrice.toLocaleString('vi-VN')}đ\n`;
+    text += `🚀 Miễn phí vận chuyển & lắp đặt nội thành!\n`;
+    text += `👉 Liên hệ ngay để nhận ưu đãi!`;
+
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Đã tạo Combo và copy thành công!");
+        closeCombo();
+    });
+}
+
+function closeCombo() {
+    document.getElementById('comboOverlay').style.display = 'none';
+}
 
     function getWeatherDesc(code) {
         const mapping = {
