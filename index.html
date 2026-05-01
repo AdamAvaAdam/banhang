@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.7 - Việt Tuấn</title>
+    <title>Bravo Sync V7.8 - Việt Tuấn</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
@@ -16,7 +16,7 @@
         .weather-days { display: flex; justify-content: space-between; }
         .day-item { text-align: center; flex: 1; font-size: 11px; }
         .day-item b { display: block; font-size: 11px; color: #666; }
-        .w-desc { display: block; font-size: 10px; color: #555; margin-top: 2px; }
+        .w-desc { display: block; font-size: 10px; color: #555; margin-top: 2px; font-weight: 500; }
         .temp { font-weight: bold; color: #ff5722; display: block; margin-top: 2px; }
 
         .action-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
@@ -26,9 +26,10 @@
         
         #filterKM { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; outline: none; flex: 1; min-width: 180px; cursor: pointer; color: var(--primary); font-weight: 500; }
 
-        button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
+        button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; transition: 0.2s; }
         .btn-quote { background: var(--warning); color: #fff; }
-        .btn-select-all { background: #5a6268; }
+        .btn-toggle-select { background: #5a6268; min-width: 130px; }
+        .btn-toggle-select.active { background: #bdc3c7; color: #333; }
         
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
@@ -48,7 +49,6 @@
         .quote-table td { padding: 12px; border: 1px solid #eee; font-size: 13px; }
         
         .btn-zalo { background: var(--zalo); color: white; }
-        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
@@ -68,7 +68,9 @@
             <option value="">-- Tất cả chương trình --</option>
         </select>
         
-        <button class="btn-select-all" onclick="selectAllVisible()">CHỌN TẤT CẢ</button>
+        <!-- Nút gộp Chọn/Bỏ chọn -->
+        <button id="btnToggleAll" class="btn-toggle-select" onclick="handleToggleSelect()">CHỌN TẤT CẢ</button>
+
         <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
         <button class="btn-quote" onclick="showQuote()">TẠO BÁO GIÁ (<span id="selectedCount">0</span>)</button>
         <button onclick="loadData()" style="background: var(--success);">LÀM MỚI</button>
@@ -121,17 +123,17 @@
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = [];
+    let filteredData = [];
     let isHidden = false;
     let selectedIndices = new Set(); 
 
     window.onload = () => { loadData(); loadWeather(); };
 
-    // Hàm chuyển đổi mã thời tiết sang tiếng Việt
     function getWeatherDesc(code) {
         const mapping = {
-            0: "☀️ Nắng", 1: "🌤️ Ít mây", 2: "⛅ Mây rải rác", 3: "☁️ U ám",
-            45: "🌫️ Sương mù", 51: "🌦️ Mưa phùn", 61: "🌧️ Mưa nhỏ", 63: "🌧️ Mưa vừa",
-            71: "❄️ Tuyết nhẹ", 80: "⛈️ Mưa rào", 95: "🌩️ Dông"
+            0: "☀️ Trời nắng", 1: "🌤️ Ít mây", 2: "⛅ Mây rải rác", 3: "☁️ Nhiều mây",
+            45: "🌫️ Sương mù", 51: "🌦️ Mưa phùn nhẹ", 61: "🌧️ Có mưa nhỏ", 63: "🌧️ Mưa vừa",
+            80: "⛈️ Mưa rào", 95: "🌩️ Có dông"
         };
         return mapping[code] || "🌤️ Bình thường";
     }
@@ -200,7 +202,7 @@
                 const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
                 const ton = stockMap[ma] ? parseInt(stockMap[ma]) : 0;
 
-                // CHỈ LẤY CÁC MÃ CÓ TỒN > 0
+                // ẨN MÃ HẾT TỒN (TỒN = 0)
                 if (ma && gia > 0 && ton > 0) {
                     masterData.push({ 
                         id: masterData.length, ma, ten: cols[1], ton, gia, km,
@@ -225,7 +227,6 @@
 
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
-        const hideClass = isHidden ? 'hidden-stock' : '';
         tbody.innerHTML = data.map(item => `
             <tr class="${selectedIndices.has(item.id) ? 'selected-row' : ''}">
                 <td style="text-align:center">
@@ -242,13 +243,29 @@
                 <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
             </tr>
         `).join('');
-        document.getElementById('selectedCount').innerText = selectedIndices.size;
+        
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        const count = selectedIndices.size;
+        document.getElementById('selectedCount').innerText = count;
+        
+        const btn = document.getElementById('btnToggleAll');
+        if (count > 0 && count === filteredData.length) {
+            btn.innerText = "BỎ CHỌN TẤT CẢ";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "CHỌN TẤT CẢ";
+            btn.classList.remove('active');
+        }
     }
 
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
         const kmFilter = document.getElementById('filterKM').value;
         document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
+        
         filteredData = masterData.filter(i => {
             const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q);
             const matchKM = kmFilter === "" || i.km === kmFilter;
@@ -263,8 +280,12 @@
         renderTable(filteredData);
     }
 
-    function selectAllVisible() {
-        filteredData.forEach(item => selectedIndices.add(item.id));
+    function handleToggleSelect() {
+        if (selectedIndices.size === filteredData.length && filteredData.length > 0) {
+            selectedIndices.clear();
+        } else {
+            filteredData.forEach(item => selectedIndices.add(item.id));
+        }
         renderTable(filteredData);
     }
 
