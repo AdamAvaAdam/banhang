@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.5 - Tìm Theo Chương Trình</title>
+    <title>Bravo Sync V7.6 - Hệ Thống Báo Giá Việt Tuấn</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
@@ -31,28 +31,28 @@
         .btn-deselect-all { background: #bdc3c7; color: #333; }
         
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
         .selected-row { background-color: #fff9c4 !important; }
         .price { color: var(--danger); font-weight: bold; font-size: 15px; }
         .ma-sp { color: #999; font-size: 11px; display: block; font-family: monospace; }
         .km-label { font-size: 13px; color: var(--success); font-weight: 500; }
+        .specs-text { font-size: 11px; color: #666; margin-top: 4px; font-style: italic; line-height: 1.4; display: block; max-width: 450px; }
         
         .hidden-stock .stock-val { display: none; }
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
 
         .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
-        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .quote-modal { background: white; width: 95%; max-width: 750px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
         .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
         .quote-scroll-area { overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; flex-grow: 1; }
         .quote-table { width: 100%; border-collapse: collapse; }
         .quote-table th { position: sticky; top: 0; background: #f9f9f9; padding: 10px; border: 1px solid #eee; z-index: 10; }
-        .quote-table td { padding: 12px; border: 1px solid #eee; font-size: 14px; }
+        .quote-table td { padding: 12px; border: 1px solid #eee; font-size: 13px; }
         
         .btn-zalo { background: var(--zalo); color: white; }
-
         #quoteModalContainer:fullscreen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
         @media print { .no-print { display: none; } }
     </style>
@@ -66,7 +66,7 @@
 
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Tìm tên, mã máy hoặc thông số..." onkeyup="filterTable()">
             <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
         </div>
         
@@ -87,10 +87,10 @@
             <thead>
                 <tr>
                     <th style="width: 40px; text-align:center;">Chọn</th>
-                    <th style="width: 40%;">SẢN PHẨM</th>
-                    <th style="width: 10%; text-align:center;">TỒN</th>
+                    <th style="width: 45%;">SẢN PHẨM & THÔNG SỐ</th>
+                    <th style="width: 8%; text-align:center;">TỒN</th>
                     <th style="width: 15%;">GIÁ BÁN</th>
-                    <th style="width: 30%;">KHUYẾN MÃI</th>
+                    <th style="width: 25%;">KHUYẾN MÃI</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -108,8 +108,8 @@
             <table class="quote-table">
                 <thead>
                     <tr>
-                        <th>Tên sản phẩm</th>
-                        <th style="text-align:right">Đơn giá</th>
+                        <th>Sản phẩm / Thông số</th>
+                        <th style="text-align:right; width: 120px;">Đơn giá</th>
                         <th>Khuyến mãi</th>
                     </tr>
                 </thead>
@@ -125,11 +125,13 @@
 </div>
 
 <script>
+    // Các nguồn dữ liệu từ Google Sheets
     const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
+    const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = [];
-    let filteredData = []; // Danh sách sau khi lọc để phục vụ nút Chọn tất cả
+    let filteredData = []; 
     let isHidden = false;
     let selectedIndices = new Set(); 
 
@@ -172,16 +174,25 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu từ Google Sheets...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu từ hệ thống Việt Tuấn...</td></tr>';
         try {
-            const [csvStock, csvPrice] = await Promise.all([
+            const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
-                fetch(URL_PRICE + "&cache=" + Date.now()).then(r => r.text())
+                fetch(URL_PRICE + "&cache=" + Date.now()).then(r => r.text()),
+                fetch(URL_SPECS + "&cache=" + Date.now()).then(r => r.text())
             ]);
+            
             const stockRows = parseCSV(csvStock);
             const priceRows = parseCSV(csvPrice);
+            const specRows = parseCSV(csvSpecs);
+
+            // 1. Ánh xạ Tồn kho (Cột A là Mã, Cột D là Tồn)
             let stockMap = {};
             stockRows.forEach(cols => { if (cols[0] && cols[0] !== "Mã") stockMap[cols[0]] = cols[3]; });
+
+            // 2. Ánh xạ Thông số kỹ thuật (Cột A là Mã, Cột C là Thông số chi tiết)
+            let specMap = {};
+            specRows.forEach(cols => { if (cols[0]) specMap[cols[0]] = cols[2]; });
             
             masterData = [];
             priceRows.forEach((cols, idx) => {
@@ -189,14 +200,27 @@
                 const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
                 const gia = parseInt(giaRaw);
                 const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
-                if (ma && gia > 0 && stockMap[ma] !== undefined) {
-                    masterData.push({ id: masterData.length, ma, ten: cols[1], ton: stockMap[ma], gia, km });
+                
+                // Chỉ lấy sản phẩm có mã và có giá
+                if (ma && gia > 0) {
+                    masterData.push({ 
+                        id: masterData.length, 
+                        ma, 
+                        ten: cols[1], 
+                        ton: stockMap[ma] !== undefined ? stockMap[ma] : 0, 
+                        gia, 
+                        km,
+                        thongSo: specMap[ma] || "Thông số đang cập nhật..."
+                    });
                 }
             });
 
             updateKMList(masterData);
             filterTable();
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối trang tính! Vui lòng kiểm tra Internet.</td></tr>'; }
+        } catch (e) { 
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối dữ liệu! Vui lòng kiểm tra lại Google Sheets.</td></tr>'; 
+        }
     }
 
     function updateKMList(data) {
@@ -222,7 +246,11 @@
                     <input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} 
                            onclick="toggleSelect(${item.id})" style="width:18px; height:18px; cursor:pointer">
                 </td>
-                <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
+                <td>
+                    <b>${item.ten}</b>
+                    <span class="ma-sp">${item.ma}</span>
+                    <span class="specs-text">${item.thongSo}</span>
+                </td>
                 <td style="text-align:center;font-weight:bold;color:var(--primary)">
                     <span class="stock-val">${item.ton}</span><span class="stock-mask">***</span>
                 </td>
@@ -240,14 +268,15 @@
         document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
 
         filteredData = masterData.filter(i => {
-            const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q);
+            const matchSearch = i.ten.toLowerCase().includes(q) || 
+                               i.ma.toLowerCase().includes(q) || 
+                               i.thongSo.toLowerCase().includes(q);
             const matchKM = kmFilter === "" || i.km === kmFilter;
             return matchSearch && matchKM;
         });
         renderTable(filteredData);
     }
 
-    // --- CÁC HÀM CHỌN MỚI ---
     function selectAllVisible() {
         if (filteredData.length === 0) return;
         filteredData.forEach(item => selectedIndices.add(item.id));
@@ -263,8 +292,6 @@
         if (selectedIndices.has(id)) selectedIndices.delete(id);
         else selectedIndices.add(id);
         document.getElementById('selectedCount').innerText = selectedIndices.size;
-        
-        // Cập nhật lại màu dòng nhanh
         renderTable(filteredData);
     }
 
@@ -274,7 +301,10 @@
         
         document.getElementById('quoteBody').innerHTML = items.map(i => `
             <tr>
-                <td><b>${i.ten}</b></td>
+                <td>
+                    <div style="font-weight:bold">${i.ten}</div>
+                    <div style="font-size:11px; color:#666; margin-top:3px">${i.thongSo}</div>
+                </td>
                 <td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td>
                 <td style="font-size:12px; color:var(--success)">${i.km !== "-" ? i.km : ""}</td>
             </tr>
@@ -292,6 +322,7 @@
         
         items.forEach((item, index) => {
             text += `${index + 1}. ${item.ten.toUpperCase()}\n`;
+            text += `   - Thông số: ${item.thongSo}\n`;
             text += `   - Giá bán: ${item.gia.toLocaleString('vi-VN')}đ\n`;
             if (item.km !== "-") {
                 text += `   - Khuyến mãi: ${item.km}\n`;
@@ -300,7 +331,7 @@
         });
 
         navigator.clipboard.writeText(text).then(() => {
-            alert("Đã copy danh sách báo giá! Bạn có thể dán vào Zalo ngay.");
+            alert("Đã copy danh sách báo giá kèm thông số chi tiết!");
         }).catch(err => {
             alert("Lỗi copy! Hãy cấp quyền truy cập Clipboard.");
         });
