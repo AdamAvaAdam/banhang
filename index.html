@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.9 - Việt Tuấn (Combo Edition)</title>
+    <title>Bravo Sync V8.0 - Việt Tuấn (Price Color Edition)</title>
     <style>
         :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --combo: #e67e22; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
@@ -40,10 +40,15 @@
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #eee; color: #666; text-transform: uppercase; }
         td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
         .selected-row { background-color: #fff9c4 !important; }
-        .price { color: var(--danger); font-weight: bold; font-size: 15px; }
         .ma-sp { color: #999; font-size: 11px; display: block; font-family: monospace; }
         .specs-text { font-size: 11px; color: #666; margin-top: 4px; font-style: italic; line-height: 1.4; display: block; max-width: 450px; }
         
+        /* Price Colors */
+        .price-high { color: var(--danger); font-weight: bold; font-size: 15px; }
+        .price-low { color: var(--success); font-weight: bold; font-size: 15px; }
+        .price-mid { color: #f39c12; font-weight: bold; font-size: 15px; }
+        .price-normal { color: #333; font-weight: bold; font-size: 15px; }
+
         /* Modals */
         .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
         .quote-modal { background: white; width: 95%; max-width: 750px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
@@ -61,7 +66,6 @@
 <div class="header"><h3 style="margin:0">HỆ THỐNG TRA CỨU & BÁO GIÁ - VIỆT TUẤN</h3></div>
 
 <div class="container">
-    <!-- Weather Widget -->
     <div class="weather-wrap" id="weatherContent"></div>
 
     <div class="action-bar">
@@ -81,7 +85,6 @@
         <button onclick="loadData()" style="background: var(--success);">LÀM MỚI</button>
     </div>
 
-    <!-- Data Table -->
     <div class="table-res">
         <table>
             <thead>
@@ -98,7 +101,7 @@
     </div>
 </div>
 
-<!-- Modal Báo Giá Lẻ -->
+<!-- Modal Báo Giá -->
 <div id="quoteOverlay" class="quote-overlay">
     <div class="quote-modal" id="quoteModalContainer">
         <div class="quote-header">
@@ -133,12 +136,7 @@
         <div style="padding: 15px;">
             <label style="font-weight: bold; font-size: 14px;">Tên chương trình Combo:</label>
             <input type="text" id="comboName" placeholder="VD: COMBO GIẢI NHIỆT MÙA HÈ" style="width:100%; padding:12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            
-            <div style="margin-bottom: 5px; font-weight: bold; font-size: 14px;">Điều chỉnh số lượng:</div>
-            <div id="comboItemsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 4px;">
-                <!-- Combo items injected here -->
-            </div>
-            
+            <div id="comboItemsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 4px;"></div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeModal('comboOverlay')" style="background:#666; flex:1">HỦY</button>
                 <button onclick="generateComboZalo()" class="btn-zalo" style="flex:2">COPY COMBO GỬI ZALO</button>
@@ -148,7 +146,6 @@
 </div>
 
 <script>
-    // URLs from Google Sheets
     const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
@@ -157,16 +154,13 @@
     let filteredData = [];
     let isHidden = false;
     let selectedIndices = new Set(); 
+    let priceGroups = {}; // Để theo dõi các mức giá theo mã hàng
 
     window.onload = () => { loadData(); loadWeather(); };
 
     // Weather Logic
     function getWeatherDesc(code) {
-        const mapping = {
-            0: "☀️ Trời nắng", 1: "🌤️ Ít mây", 2: "⛅ Mây rải rác", 3: "☁️ Nhiều mây",
-            45: "🌫️ Sương mù", 51: "🌦️ Mưa phùn", 61: "🌧️ Mưa nhỏ", 63: "🌧️ Mưa vừa",
-            80: "⛈️ Mưa rào", 95: "🌩️ Có dông"
-        };
+        const mapping = {0:"☀️ Trời nắng",1:"🌤️ Ít mây",2:"⛅ Mây rải rác",3:"☁️ Nhiều mây",45:"🌫️ Sương mù",51:"🌦️ Mưa phùn",61:"🌧️ Mưa nhỏ",63:"🌧️ Mưa vừa",80:"⛈️ Mưa rào",95:"🌩️ Có dông"};
         return mapping[code] || "🌤️ Bình thường";
     }
 
@@ -177,8 +171,7 @@
             let html = `<div class="weather-card"><div class="weather-title">📍 Dự báo ${name}</div><div class="weather-days">`;
             for(let i=0; i<3; i++) {
                 const dayLabel = i === 0 ? "Hôm nay" : `${new Date(data.daily.time[i]).getDate()}/${new Date(data.daily.time[i]).getMonth()+1}`;
-                const desc = getWeatherDesc(data.daily.weather_code[i]);
-                html += `<div class="day-item"><b>${dayLabel}</b><span class="w-desc">${desc}</span><span class="temp">${Math.round(data.daily.temperature_2m_min[i])}°-${Math.round(data.daily.temperature_2m_max[i])}°C</span></div>`;
+                html += `<div class="day-item"><b>${dayLabel}</b><span class="w-desc">${getWeatherDesc(data.daily.weather_code[i])}</span><span class="temp">${Math.round(data.daily.temperature_2m_min[i])}°-${Math.round(data.daily.temperature_2m_max[i])}°C</span></div>`;
             }
             return html + `</div></div>`;
         } catch (e) { return `<div class="weather-card">Lỗi tải thời tiết ${name}</div>`; }
@@ -189,7 +182,6 @@
         document.getElementById('weatherContent').innerHTML = hn + hy;
     }
 
-    // CSV Parsing Logic
     function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
@@ -207,7 +199,6 @@
         return rows;
     }
 
-    // Load Data with Stock Filter
     async function loadData() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang cập nhật tồn kho & giá mới...</td></tr>';
@@ -229,6 +220,8 @@
             specRows.forEach(cols => { if (cols[0]) specMap[cols[0]] = cols[2]; });
             
             masterData = [];
+            priceGroups = {}; // Reset groups
+
             priceRows.forEach((cols) => {
                 const ma = cols[0];
                 const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
@@ -236,18 +229,39 @@
                 const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
                 const ton = stockMap[ma] ? parseInt(stockMap[ma]) : 0;
 
-                // FILTER: Only show items with Price > 0 AND Stock > 0
                 if (ma && gia > 0 && ton > 0) {
-                    masterData.push({ 
+                    const item = { 
                         id: masterData.length, ma, ten: cols[1], ton, gia, km,
                         thongSo: specMap[ma] || "Thông số đang cập nhật..."
-                    });
+                    };
+                    masterData.push(item);
+
+                    // Nhóm giá theo mã hàng
+                    if (!priceGroups[ma]) priceGroups[ma] = [];
+                    if (!priceGroups[ma].includes(gia)) priceGroups[ma].push(gia);
                 }
+            });
+
+            // Sắp xếp các mức giá trong nhóm để xác định min/max
+            Object.keys(priceGroups).forEach(ma => {
+                priceGroups[ma].sort((a, b) => a - b);
             });
 
             updateKMList(masterData);
             filterTable();
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối dữ liệu! Vui lòng thử lại.</td></tr>'; }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối dữ liệu!</td></tr>'; }
+    }
+
+    function getPriceClass(ma, gia) {
+        const group = priceGroups[ma];
+        if (!group || group.length <= 1) return "price-normal";
+        
+        const min = group[0];
+        const max = group[group.length - 1];
+
+        if (gia === max) return "price-high"; // Cao nhất -> Đỏ
+        if (gia === min) return "price-low";  // Thấp nhất -> Xanh
+        return "price-mid"; // Ở giữa -> Vàng
     }
 
     function updateKMList(data) {
@@ -273,21 +287,19 @@
                 <td style="text-align:center;font-weight:bold;color:var(--primary)">
                     ${isHidden ? '***' : item.ton}
                 </td>
-                <td class="price">${item.gia.toLocaleString('vi-VN')}đ</td>
+                <td class="${getPriceClass(item.ma, item.gia)}">
+                    ${item.gia.toLocaleString('vi-VN')}đ
+                </td>
                 <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
             </tr>
         `).join('');
-        
         updateSelectionUI();
     }
 
     function updateSelectionUI() {
         const count = selectedIndices.size;
         document.getElementById('selectedCount').innerText = count;
-        
-        // Show Combo button if 2+ items selected
         document.getElementById('btnCombo').style.display = count >= 2 ? 'inline-block' : 'none';
-
         const btn = document.getElementById('btnToggleAll');
         if (count > 0 && count === filteredData.length) {
             btn.innerText = "BỎ CHỌN TẤT CẢ";
@@ -302,7 +314,6 @@
         const q = document.getElementById('searchBox').value.toLowerCase();
         const kmFilter = document.getElementById('filterKM').value;
         document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
-        
         filteredData = masterData.filter(i => {
             const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q);
             const matchKM = kmFilter === "" || i.km === kmFilter;
@@ -318,11 +329,8 @@
     }
 
     function handleToggleSelect() {
-        if (selectedIndices.size === filteredData.length && filteredData.length > 0) {
-            selectedIndices.clear();
-        } else {
-            filteredData.forEach(item => selectedIndices.add(item.id));
-        }
+        if (selectedIndices.size === filteredData.length && filteredData.length > 0) selectedIndices.clear();
+        else filteredData.forEach(item => selectedIndices.add(item.id));
         renderTable(filteredData);
     }
 
@@ -332,7 +340,6 @@
         renderTable(filteredData);
     }
 
-    // Modal Báo Giá Lẻ
     function showQuote() {
         if (selectedIndices.size === 0) return alert("Vui lòng chọn sản phẩm!");
         const items = masterData.filter(i => selectedIndices.has(i.id));
@@ -349,8 +356,7 @@
 
     function copyToZalo() {
         const items = masterData.filter(i => selectedIndices.has(i.id));
-        let text = `📣 BÁO GIÁ VIỆT TUẤN - ${new Date().toLocaleDateString('vi-VN')}\n`;
-        text += `--------------------------\n`;
+        let text = `📣 BÁO GIÁ VIỆT TUẤN - ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`;
         items.forEach((item, index) => {
             text += `${index + 1}. ${item.ten.toUpperCase()}\n   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
             if (item.km !== "-") text += `   - KM: ${item.km}\n`;
@@ -358,21 +364,15 @@
         navigator.clipboard.writeText(text).then(() => alert("Đã copy báo giá lẻ!"));
     }
 
-    // Modal Combo Logic
     function openComboModal() {
         const items = masterData.filter(i => selectedIndices.has(i.id));
         const listArea = document.getElementById('comboItemsList');
-        
         listArea.innerHTML = items.map(item => `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span style="flex: 1; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px;">${item.ten}</span>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <span style="font-size: 11px; color: #666;">Số lượng:</span>
-                    <input type="number" class="combo-qty" data-id="${item.id}" value="1" min="1" style="width: 50px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
+                <input type="number" class="combo-qty" data-id="${item.id}" value="1" min="1" style="width: 50px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
         `).join('');
-        
         document.getElementById('comboOverlay').style.display = 'flex';
     }
 
@@ -380,30 +380,15 @@
         const comboName = document.getElementById('comboName').value || "COMBO SIÊU HOT";
         const items = masterData.filter(i => selectedIndices.has(i.id));
         const qtyInputs = document.querySelectorAll('.combo-qty');
-        
-        let totalComboPrice = 0;
-        let text = `🔥 ${comboName.toUpperCase()} 🔥\n`;
-        text += `📅 Ngày tạo: ${new Date().toLocaleDateString('vi-VN')}\n`;
-        text += `--------------------------\n`;
-
+        let total = 0;
+        let text = `🔥 ${comboName.toUpperCase()} 🔥\n📅 Ngày: ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`;
         items.forEach((item, index) => {
             const qty = parseInt(Array.from(qtyInputs).find(input => input.dataset.id == item.id).value) || 1;
-            const linePrice = item.gia * qty;
-            totalComboPrice += linePrice;
-            
-            text += `${index + 1}. ${item.ten} (x${qty})\n`;
-            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
+            total += item.gia * qty;
+            text += `${index + 1}. ${item.ten} (x${qty})\n   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
         });
-
-        text += `--------------------------\n`;
-        text += `💰 TỔNG GIÁ COMBO: ${totalComboPrice.toLocaleString('vi-VN')}đ\n`;
-        text += `🚀 Miễn phí vận chuyển nội thành!\n`;
-        text += `👉 Liên hệ ngay Hotline 0869.587.793   để nhận ưu đãi!`;
-
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Đã tạo Combo và copy thành công!");
-            closeModal('comboOverlay');
-        });
+        text += `--------------------------\n💰 TỔNG GIÁ: ${total.toLocaleString('vi-VN')}đ\n🚀 Miễn phí vận chuyển nội thành!\n👉 Liên hệ Việt Tuấn ngay!`;
+        navigator.clipboard.writeText(text).then(() => { alert("Đã copy combo!"); closeModal('comboOverlay'); });
     }
 
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
