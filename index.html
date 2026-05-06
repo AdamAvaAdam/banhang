@@ -3,23 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V7.8 - Báo Giá & Gửi Zalo</title>
+    <title>Bravo Sync V7.5 - Tìm Theo Chương Trình</title>
     <style>
-        :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --zalo: #0068ff; --bg: #f4f6f9; }
+        :root { --primary: #1a73e8; --danger: #d93025; --success: #28a745; --warning: #f2994a; --bg: #f4f6f9; --zalo: #0068ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 1100px; margin: auto; }
         
+        .weather-wrap { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .weather-card { flex: 1; min-width: 280px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .weather-title { font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px; font-size: 14px; }
+        .weather-days { display: flex; justify-content: space-between; }
+        .day-item { text-align: center; flex: 1; font-size: 12px; }
+        .day-item b { display: block; font-size: 11px; color: #666; }
+        .temp { font-weight: bold; color: #ff5722; display: block; }
+
         .action-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         .search-wrapper { position: relative; flex: 2; min-width: 200px; }
         #searchBox { width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; outline: none; }
         #clearSearch { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #999; cursor: pointer; display: none; font-weight: bold; }
         
-        #filterKM { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; outline: none; flex: 1; min-width: 160px; cursor: pointer; color: var(--primary); font-weight: 500; }
+        #filterKM { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; outline: none; flex: 1; min-width: 180px; cursor: pointer; color: var(--primary); font-weight: 500; }
 
         button { padding: 12px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; color: white; background: #6c757d; white-space: nowrap; }
         .btn-quote { background: var(--warning); color: #fff; }
-        .btn-zalo { background: var(--zalo); color: #fff; }
+        .btn-select-all { background: #5a6268; }
+        .btn-deselect-all { background: #bdc3c7; color: #333; }
         
         .table-res { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
@@ -34,36 +43,42 @@
         .hidden-stock .stock-mask { display: inline; color: #ccc; }
         .stock-mask { display: none; }
 
-        /* Modal Báo giá */
         .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
-        .quote-modal { background: white; width: 95%; max-width: 750px; max-height: 95vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .quote-modal { background: white; width: 95%; max-width: 700px; max-height: 90vh; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; box-sizing: border-box; }
         .quote-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
         .quote-scroll-area { overflow-y: auto; margin-bottom: 15px; border: 1px solid #eee; flex-grow: 1; }
         .quote-table { width: 100%; border-collapse: collapse; }
         .quote-table th { position: sticky; top: 0; background: #f9f9f9; padding: 10px; border: 1px solid #eee; z-index: 10; }
         .quote-table td { padding: 12px; border: 1px solid #eee; font-size: 14px; }
         
+        .btn-zalo { background: var(--zalo); color: white; }
+
         #quoteModalContainer:fullscreen { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 30px; display: flex; flex-direction: column; }
         @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
-<div class="header"><h3 style="margin:0">HỆ THỐNG BÁO GIÁ NHANH - VIỆT TUẤN</h3></div>
+<div class="header"><h3 style="margin:0">HỆ THỐNG TRA CỨU & BÁO GIÁ - VIỆT TUẤN</h3></div>
 
 <div class="container">
+    <div class="weather-wrap" id="weatherContent"></div>
+
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Tìm tên hoặc mã máy..." onkeyup="filterTable()">
             <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
         </div>
         
         <select id="filterKM" onchange="filterTable()">
-            <option value="">-- Chương trình --</option>
+            <option value="">-- Tất cả chương trình --</option>
         </select>
+        
+        <button class="btn-select-all" onclick="selectAllVisible()">CHỌN TẤT CẢ</button>
+        <button class="btn-deselect-all" onclick="deselectAll()">BỎ CHỌN TẤT CẢ</button>
 
         <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
-        <button class="btn-quote" onclick="showQuote()">XEM BÁO GIÁ (<span id="selectedCount">0</span>)</button>
+        <button class="btn-quote" onclick="showQuote()">TẠO BÁO GIÁ (<span id="selectedCount">0</span>)</button>
         <button onclick="loadData()" style="background: var(--success);">LÀM MỚI</button>
     </div>
 
@@ -86,14 +101,14 @@
 <div id="quoteOverlay" class="quote-overlay">
     <div class="quote-modal" id="quoteModalContainer">
         <div class="quote-header">
-            <h2 style="margin:0; color: var(--primary); font-size: 20px;">BÁO GIÁ CHI TIẾT</h2>
-            <p id="quoteDate" style="margin: 5px 0; color: #666; font-size: 13px;"></p>
+            <h2 style="margin:0; color: var(--primary); font-size: 22px;">BÁO GIÁ SẢN PHẨM</h2>
+            <small id="quoteDate" style="color: #666;"></small>
         </div>
         <div class="quote-scroll-area">
             <table class="quote-table">
                 <thead>
                     <tr>
-                        <th>Sản phẩm / Mã hàng</th>
+                        <th>Tên sản phẩm</th>
                         <th style="text-align:right">Đơn giá</th>
                         <th>Khuyến mãi</th>
                     </tr>
@@ -101,12 +116,10 @@
                 <tbody id="quoteBody"></tbody>
             </table>
         </div>
-        <div class="no-print" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button onclick="closeQuote()" style="background:#666;">ĐÓNG & XÓA</button>
-            <button onclick="toggleFullScreen()" style="background:var(--success);">TOÀN MÀN HÌNH CHỤP ẢNH</button>
-            <button class="btn-zalo" onclick="sendZaloText()" style="grid-column: span 2; padding: 15px; font-size: 15px;">
-                GỬI TIN NHẮN VĂN BẢN (ZALO)
-            </button>
+        <div class="no-print" style="display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap;">
+            <button onclick="closeQuote()" style="background:#666; flex:1">ĐÓNG</button>
+            <button onclick="copyToZalo()" class="btn-zalo" style="flex:2">COPY GỬI ZALO</button>
+            <button onclick="toggleFullScreen()" style="background:var(--success); flex:2">TOÀN MÀN HÌNH</button>
         </div>
     </div>
 </div>
@@ -116,10 +129,29 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
 
     let masterData = [];
+    let filteredData = []; // Danh sách sau khi lọc để phục vụ nút Chọn tất cả
     let isHidden = false;
     let selectedIndices = new Set(); 
 
-    window.onload = () => { loadData(); };
+    window.onload = () => { loadData(); loadWeather(); };
+
+    async function fetchWeather(lat, lon, name) {
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
+            const data = await res.json();
+            let html = `<div class="weather-card"><div class="weather-title">📍 Dự báo ${name}</div><div class="weather-days">`;
+            for(let i=0; i<3; i++) {
+                const dayLabel = i === 0 ? "Hôm nay" : `${new Date(data.daily.time[i]).getDate()}/${new Date(data.daily.time[i]).getMonth()+1}`;
+                html += `<div class="day-item"><b>${dayLabel}</b><span class="temp">${Math.round(data.daily.temperature_2m_min[i])}°-${Math.round(data.daily.temperature_2m_max[i])}°C</span></div>`;
+            }
+            return html + `</div></div>`;
+        } catch (e) { return `<div class="weather-card">Lỗi tải thời tiết ${name}</div>`; }
+    }
+
+    async function loadWeather() {
+        const [hn, hy] = await Promise.all([fetchWeather(21.0245, 105.8412, "Hà Nội"), fetchWeather(20.6464, 106.0511, "Hưng Yên")]);
+        document.getElementById('weatherContent').innerHTML = hn + hy;
+    }
 
     function parseCSV(text) {
         const rows = [];
@@ -140,7 +172,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px">Đang đồng bộ dữ liệu từ Google Sheets...</td></tr>';
         try {
             const [csvStock, csvPrice] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
@@ -148,32 +180,36 @@
             ]);
             const stockRows = parseCSV(csvStock);
             const priceRows = parseCSV(csvPrice);
-            
             let stockMap = {};
-            stockRows.forEach(cols => { if (cols[0]) stockMap[cols[0]] = cols[3] || "0"; });
+            stockRows.forEach(cols => { if (cols[0] && cols[0] !== "Mã") stockMap[cols[0]] = cols[3]; });
             
             masterData = [];
-            priceRows.forEach((cols) => {
-                const ma = cols[0], ten = cols[1];
+            priceRows.forEach((cols, idx) => {
+                const ma = cols[0];
                 const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
                 const gia = parseInt(giaRaw);
                 const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
-                
-                if (ma && ten && stockMap[ma] !== undefined) {
-                    masterData.push({ id: masterData.length, ma, ten, ton: stockMap[ma], gia, km });
+                if (ma && gia > 0 && stockMap[ma] !== undefined) {
+                    masterData.push({ id: masterData.length, ma, ten: cols[1], ton: stockMap[ma], gia, km });
                 }
             });
+
             updateKMList(masterData);
             filterTable();
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối. Vui lòng kiểm tra file Sheets!</td></tr>'; }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Lỗi kết nối trang tính! Vui lòng kiểm tra Internet.</td></tr>'; }
     }
 
     function updateKMList(data) {
         const filterKM = document.getElementById('filterKM');
         const kmSet = new Set();
-        data.forEach(item => { if (item.km && item.km !== "-") kmSet.add(item.km); });
-        let html = '<option value="">-- Chương trình --</option>';
-        Array.from(kmSet).sort().forEach(km => { html += `<option value="${km}">${km}</option>`; });
+        data.forEach(item => {
+            if (item.km && item.km !== "-") kmSet.add(item.km);
+        });
+
+        let html = '<option value="">-- Tất cả chương trình --</option>';
+        Array.from(kmSet).sort().forEach(km => {
+            html += `<option value="${km}">${km}</option>`;
+        });
         filterKM.innerHTML = html;
     }
 
@@ -181,90 +217,119 @@
         const tbody = document.getElementById('tableBody');
         const hideClass = isHidden ? 'hidden-stock' : '';
         tbody.innerHTML = data.map(item => `
-            <tr class="${hideClass} ${selectedIndices.has(item.id) ? 'selected-row' : ''}" onclick="toggleSelectRow(${item.id})">
+            <tr class="${hideClass} ${selectedIndices.has(item.id) ? 'selected-row' : ''}">
                 <td style="text-align:center">
-                    <input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer">
+                    <input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} 
+                           onclick="toggleSelect(${item.id})" style="width:18px; height:18px; cursor:pointer">
                 </td>
                 <td><b>${item.ten}</b><span class="ma-sp">${item.ma}</span></td>
                 <td style="text-align:center;font-weight:bold;color:var(--primary)">
                     <span class="stock-val">${item.ton}</span><span class="stock-mask">***</span>
                 </td>
-                <td class="price">${item.gia > 0 ? item.gia.toLocaleString('vi-VN') + 'đ' : 'Liên hệ'}</td>
+                <td class="price">${item.gia.toLocaleString('vi-VN')}đ</td>
                 <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
             </tr>
         `).join('');
         document.getElementById('selectedCount').innerText = selectedIndices.size;
     }
 
-    function toggleSelectRow(id) {
-        if (selectedIndices.has(id)) selectedIndices.delete(id);
-        else selectedIndices.add(id);
-        filterTable();
-    }
-
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
         const kmFilter = document.getElementById('filterKM').value;
-        const filtered = masterData.filter(i => {
+        
+        document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
+
+        filteredData = masterData.filter(i => {
             const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q);
             const matchKM = kmFilter === "" || i.km === kmFilter;
             return matchSearch && matchKM;
         });
-        document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
-        renderTable(filtered);
+        renderTable(filteredData);
+    }
+
+    // --- CÁC HÀM CHỌN MỚI ---
+    function selectAllVisible() {
+        if (filteredData.length === 0) return;
+        filteredData.forEach(item => selectedIndices.add(item.id));
+        renderTable(filteredData);
+    }
+
+    function deselectAll() {
+        selectedIndices.clear();
+        renderTable(filteredData);
+    }
+
+    function toggleSelect(id) {
+        if (selectedIndices.has(id)) selectedIndices.delete(id);
+        else selectedIndices.add(id);
+        document.getElementById('selectedCount').innerText = selectedIndices.size;
+        
+        // Cập nhật lại màu dòng nhanh
+        renderTable(filteredData);
     }
 
     function showQuote() {
-        if (selectedIndices.size === 0) return alert("Vui lòng tích chọn mã hàng!");
+        if (selectedIndices.size === 0) return alert("Vui lòng tích chọn sản phẩm!");
         const items = masterData.filter(i => selectedIndices.has(i.id));
+        
         document.getElementById('quoteBody').innerHTML = items.map(i => `
             <tr>
-                <td><b>${i.ten}</b><br><small style="color:#666">${i.ma}</small></td>
-                <td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia > 0 ? i.gia.toLocaleString('vi-VN') + 'đ' : 'Liên hệ'}</td>
+                <td><b>${i.ten}</b></td>
+                <td style="text-align:right; font-weight:bold; color:var(--danger)">${i.gia.toLocaleString('vi-VN')}đ</td>
                 <td style="font-size:12px; color:var(--success)">${i.km !== "-" ? i.km : ""}</td>
             </tr>
         `).join('');
+        
         document.getElementById('quoteDate').innerText = "Ngày: " + new Date().toLocaleString('vi-VN');
         document.getElementById('quoteOverlay').style.display = 'flex';
     }
 
-    // --- TÍNH NĂNG GỬI ZALO ---
-    function sendZaloText() {
+    function copyToZalo() {
         const items = masterData.filter(i => selectedIndices.has(i.id));
-        let text = `*BÁO GIÁ VIỆT TUẤN*\n_Ngày: ${new Date().toLocaleDateString('vi-VN')}_\n\n`;
+        if (items.length === 0) return;
+
+        let text = `📣 BÁO GIÁ SẢN PHẨM - VIỆT TUẤN\n📅 ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`;
         
-        items.forEach((i, idx) => {
-            const priceText = i.gia > 0 ? i.gia.toLocaleString('vi-VN') + 'đ' : 'Liên hệ';
-            text += `${idx + 1}. ${i.ten}\n`;
-            text += `   - Mã: ${i.ma}\n`;
-            text += `   - Giá: ${priceText}\n`;
-            if (i.km !== "-") text += `   - KM: ${i.km}\n`;
-            text += `------------------\n`;
+        items.forEach((item, index) => {
+            text += `${index + 1}. ${item.ten.toUpperCase()}\n`;
+            text += `   - Giá bán: ${item.gia.toLocaleString('vi-VN')}đ\n`;
+            if (item.km !== "-") {
+                text += `   - Khuyến mãi: ${item.km}\n`;
+            }
+            text += `--------------------------\n`;
         });
 
-        // Copy vào bộ nhớ đệm (Clipboard) để dán nếu Zalo không tự nhận text
         navigator.clipboard.writeText(text).then(() => {
-            // Mở link zalo (chỉ mở app, người dùng dán text vào)
-            window.open(`https://zalo.me/`, '_blank');
-            alert("Đã copy báo giá vào bộ nhớ đệm. Bạn chỉ cần dán (Paste) vào khung chat Zalo khách hàng.");
+            alert("Đã copy danh sách báo giá! Bạn có thể dán vào Zalo ngay.");
+        }).catch(err => {
+            alert("Lỗi copy! Hãy cấp quyền truy cập Clipboard.");
         });
     }
 
     function closeQuote() {
         if (document.fullscreenElement) document.exitFullscreen();
-        selectedIndices.clear();
         document.getElementById('quoteOverlay').style.display = 'none';
-        filterTable();
     }
 
     function toggleFullScreen() {
         const elem = document.getElementById("quoteModalContainer");
-        if (!document.fullscreenElement) { if (elem.requestFullscreen) elem.requestFullscreen(); } 
-        else { document.exitFullscreen(); }
+        if (!document.fullscreenElement) {
+            if (elem.requestFullscreen) elem.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
     }
 
-    function clearSearchInput() { document.getElementById('searchBox').value = ""; filterTable(); }
-    function toggleStock() { isHidden = !isHidden; document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN"; filterTable(); }
+    function clearSearchInput() {
+        document.getElementById('searchBox').value = "";
+        filterTable();
+    }
+
+    function toggleStock() {
+        isHidden = !isHidden;
+        document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN";
+        renderTable(filteredData);
+    }
 </script>
 </body>
 </html>
