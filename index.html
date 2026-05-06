@@ -202,7 +202,6 @@
     </div>
 </div>
 
-<!-- Modal Báo giá lẻ -->
 <div id="quoteOverlay" class="quote-overlay">
     <div class="quote-modal">
         <div class="quote-header">
@@ -221,7 +220,6 @@
     </div>
 </div>
 
-<!-- Modal Combo -->
 <div id="comboOverlay" class="quote-overlay">
     <div class="quote-modal" style="max-width: 500px;">
         <div class="quote-header">
@@ -327,7 +325,6 @@
                 const tonGoc = stockMap[ma] || "0";
                 const tonSo = parseInt(tonGoc.replace(/[^0-9]/g, '')) || 0;
                 
-                // Logic bổ sung: Chấp nhận hàng có số tồn > 0 HOẶC chuỗi chứa chữ "có"
                 const coHang = tonSo > 0 || tonGoc.toLowerCase().includes("có");
 
                 if (ma && gia > 0 && coHang) {
@@ -452,13 +449,14 @@
         
         items.forEach((item, index) => { 
             text += `${index + 1}. ${item.ten.toUpperCase()}\n`; 
+            text += `   - Mã hàng: ${item.ma}\n`;
             text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; 
             if (item.km !== "-") {
                 text += `   - Chương trình: ${item.km}\n`;
             }
         }); 
         
-        text `;
+        text += `--------------------------`;
         navigator.clipboard.writeText(text).then(() => alert("Đã sao chép báo giá lẻ!")); 
     }
     
@@ -487,12 +485,15 @@
             total += item.gia * qty; 
             
             text += `${index + 1}. ${item.ten} (x${qty})\n`; 
+            text += `   - Mã hàng: ${item.ma}\n`;
             text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
+            if (item.km !== "-") {
+                text += `   - Chương trình: ${item.km}\n`;
+            }
         }); 
         
         text += `--------------------------\n`;
-        text += `💰 TỔNG TIỀN GÓI: ${total.toLocaleString('vi-VN')}đ\n`; 
-        
+        text += `💰 TỔNG TIỀN GÓI: ${total.toLocaleString('vi-VN')}đ`; 
         
         navigator.clipboard.writeText(text).then(() => { 
             alert("Đã sao chép Combo!"); 
