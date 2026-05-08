@@ -12,6 +12,7 @@
             --success: #1e8e3e;
             --warning: #f9ab00;
             --combo: #e67c3e;
+            --purple: #8e24aa;
             --bg: #f8f9fa;
             --text: #202124;
             --border: #dadce0;
@@ -76,11 +77,21 @@
         #searchBox:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
         #clearSearch { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #9aa0a6; cursor: pointer; display: none; }
 
-        #filterKM { 
-            padding: 11px; border: 1px solid var(--border); border-radius: 8px; 
-            font-size: 14px; background: white; flex: 1; min-width: 180px; 
-            color: var(--text); font-weight: 500; cursor: pointer;
+        /* Multi-select KM Styles */
+        .km-dropdown-wrapper { position: relative; flex: 1; min-width: 200px; }
+        .btn-km-select { 
+            width: 100%; padding: 11px; background: white; border: 1px solid var(--border); 
+            border-radius: 8px; text-align: left; font-size: 14px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
         }
+        .km-options { 
+            display: none; position: absolute; top: 100%; left: 0; width: 100%; 
+            background: white; border: 1px solid var(--border); border-radius: 8px; 
+            z-index: 1100; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 5px 0;
+        }
+        .km-option-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; }
+        .km-option-item:hover { background: var(--bg); }
 
         button { 
             padding: 11px 18px; border: none; border-radius: 8px; font-weight: 600; 
@@ -89,12 +100,10 @@
             display: flex; align-items: center; justify-content: center; gap: 5px;
         }
         button:hover { filter: brightness(0.9); transform: translateY(-1px); }
-        button:active { transform: translateY(0); }
 
         .btn-quote { background-color: var(--warning); color: #202124; }
         .btn-combo { background-color: var(--combo); }
-        .btn-toggle-select { background-color: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
-        .btn-toggle-select.active { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .btn-full-program { background-color: var(--purple); }
         .btn-refresh { background-color: var(--success); }
 
         .table-res { 
@@ -120,7 +129,6 @@
         
         .price-high { color: var(--danger); font-weight: 700; font-size: 15px; }
         .price-low { color: var(--success); font-weight: 700; font-size: 15px; }
-        .price-mid { color: #e37400; font-weight: 700; font-size: 15px; }
         .price-normal { color: var(--text); font-weight: 700; font-size: 15px; }
         .km-label { color: var(--success); font-weight: 500; font-size: 13px; }
 
@@ -131,32 +139,15 @@
         }
         .quote-modal { 
             background: white; width: 90%; max-width: 700px; padding: 25px; 
-            border-radius: 16px; display: flex; flex-direction: column; 
-            box-shadow: 0 24px 38px rgba(0,0,0,0.14);
-            animation: modalShow 0.3s ease-out;
+            border-radius: 16px; box-shadow: 0 24px 38px rgba(0,0,0,0.14);
         }
-        @keyframes modalShow { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .quote-header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; }
-        .quote-header h2, .quote-header h3 { margin: 0; color: var(--primary); font-size: 1.2rem; }
-        
         .btn-zalo { background-color: var(--zalo); color: white; padding: 14px; font-size: 15px; }
-        
-        .combo-item-row { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 10px; border-bottom: 1px solid var(--bg);
-        }
-        .combo-qty { 
-            width: 50px; padding: 8px; border: 1px solid var(--border); 
-            border-radius: 6px; text-align: center; font-weight: bold;
-        }
-
         input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
 
         @media (max-width: 768px) {
             .action-bar { flex-direction: column; align-items: stretch; }
             .search-wrapper { flex: none; width: 100%; }
-            .btn-refresh { order: -1; }
         }
     </style>
 </head>
@@ -175,14 +166,17 @@
             <span id="clearSearch" onclick="clearSearchInput()">&times;</span>
         </div>
         
-        <select id="filterKM" onchange="filterTable()">
-            <option value="">-- Tất cả chương trình --</option>
-        </select>
+        <div class="km-dropdown-wrapper">
+            <button class="btn-km-select" onclick="toggleKMDropdown()">
+                <span id="kmLabel">Tất cả chương trình</span>
+                <span>▼</span>
+            </button>
+            <div id="kmDropdown" class="km-options"></div>
+        </div>
         
-        <button id="btnToggleAll" class="btn-toggle-select" onclick="handleToggleSelect()">CHỌN TẤT CẢ</button>
-        <button id="btnHide" onclick="toggleStock()">ẨN TỒN</button>
+        <button class="btn-full-program" onclick="copyFullProgram()">GỬI GÓI CHƯƠNG TRÌNH</button>
         <button class="btn-quote" onclick="showQuote()">BÁO GIÁ LẺ (<span id="selectedCount">0</span>)</button>
-        <button class="btn-combo" id="btnCombo" onclick="openComboModal()" style="display: none;">TẠO COMBO HOT</button>
+        <button class="btn-combo" id="btnCombo" onclick="openComboModal()" style="display: none;">TẠO COMBO</button>
         <button class="btn-refresh" onclick="loadData()">LÀM MỚI</button>
     </div>
 
@@ -202,17 +196,11 @@
     </div>
 </div>
 
+<!-- Modal Báo giá -->
 <div id="quoteOverlay" class="quote-overlay">
     <div class="quote-modal">
-        <div class="quote-header">
-            <h2>BÁO GIÁ SẢN PHẨM</h2>
-            <small id="quoteDate" style="color: #5f6368;"></small>
-        </div>
-        <div style="overflow-y: auto; max-height: 400px; margin-bottom: 20px;">
-            <table style="width:100%; border-collapse: collapse;">
-                <tbody id="quoteBody"></tbody>
-            </table>
-        </div>
+        <h2 style="color:var(--primary); margin-top:0;">BÁO GIÁ SẢN PHẨM</h2>
+        <div id="quoteBody" style="max-height:400px; overflow-y:auto; border:1px solid var(--bg); margin-bottom:15px;"></div>
         <div style="display: flex; gap: 10px;">
             <button onclick="closeModal('quoteOverlay')" style="background:#dadce0; color: #3c4043; flex:1">ĐÓNG</button>
             <button onclick="copyToZalo()" class="btn-zalo" style="flex:2">COPY GỬI ZALO</button>
@@ -220,20 +208,15 @@
     </div>
 </div>
 
+<!-- Modal Combo -->
 <div id="comboOverlay" class="quote-overlay">
     <div class="quote-modal" style="max-width: 500px;">
-        <div class="quote-header">
-            <h3 style="color: var(--combo);">THIẾT LẬP COMBO SIÊU HOT</h3>
-        </div>
-        <div style="padding: 5px 0;">
-            <label style="font-size: 13px; font-weight: 600; margin-bottom: 5px; display: block;">Tên chương trình combo:</label>
-            <input type="text" id="comboName" placeholder="VD: COMBO PHÒNG GIẶT" style="width:100%; padding:12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box;">
-            <label style="font-size: 13px; font-weight: 600; margin-bottom: 5px; display: block;">Điều chỉnh số lượng:</label>
-            <div id="comboItemsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; border: 1px solid var(--bg); border-radius: 8px; padding: 5px;"></div>
-        </div>
+        <h3 style="color: var(--combo); margin-top:0;">THIẾT LẬP COMBO</h3>
+        <input type="text" id="comboName" placeholder="Tên combo (VD: Combo Phòng Giặt)" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid var(--border); border-radius:8px; box-sizing:border-box;">
+        <div id="comboItemsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;"></div>
         <div style="display: flex; gap: 10px;">
             <button onclick="closeModal('comboOverlay')" style="background:#dadce0; color: #3c4043; flex:1">HỦY</button>
-            <button onclick="generateComboZalo()" class="btn-zalo" style="flex:2">COPY COMBO GỬI ZALO</button>
+            <button onclick="generateComboZalo()" class="btn-zalo" style="flex:2">COPY COMBO ZALO</button>
         </div>
     </div>
 </div>
@@ -245,17 +228,13 @@
 
     let masterData = [];
     let filteredData = [];
-    let isHidden = false;
-    let selectedIndices = new Set(); 
-    let priceGroups = {}; 
+    let selectedIndices = new Set();
+    let priceGroups = {};
+    let selectedKMs = new Set();
 
     window.onload = () => { loadData(); loadWeather(); };
 
-    function getWeatherDesc(code) {
-        const mapping = {0:"☀️ Nắng",1:"🌤️ Ít mây",2:"⛅ Mây rải",3:"☁️ U ám",45:"🌫️ Sương mù",51:"🌦️ Phùn",61:"🌧️ Mưa nhỏ",63:"🌧️ Mưa vừa",80:"⛈️ Mưa rào",95:"🌩️ Dông"};
-        return mapping[code] || "🌤️ Bình thường";
-    }
-
+    // --- Weather Logic ---
     async function fetchWeather(lat, lon, name) {
         try {
             const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
@@ -263,17 +242,17 @@
             let html = `<div class="weather-card"><div class="weather-title">📍 Dự báo 5 ngày: ${name}</div><div class="weather-days">`;
             for(let i=0; i<5; i++) {
                 const dayLabel = i === 0 ? "Nay" : `${new Date(data.daily.time[i]).getDate()}/${new Date(data.daily.time[i]).getMonth()+1}`;
-                html += `<div class="day-item"><b>${dayLabel}</b><span class="w-desc">${getWeatherDesc(data.daily.weather_code[i])}</span><span class="temp">${Math.round(data.daily.temperature_2m_min[i])}°-${Math.round(data.daily.temperature_2m_max[i])}°</span></div>`;
+                html += `<div class="day-item"><b>${dayLabel}</b><span class="w-desc">🌤️</span><span class="temp">${Math.round(data.daily.temperature_2m_max[i])}°C</span></div>`;
             }
             return html + `</div></div>`;
-        } catch (e) { return `<div class="weather-card">Lỗi tải thời tiết ${name}</div>`; }
+        } catch (e) { return ""; }
     }
-
     async function loadWeather() {
         const [hn, hy] = await Promise.all([fetchWeather(21.0245, 105.8412, "Hà Nội"), fetchWeather(20.6464, 106.0511, "Hưng Yên")]);
         document.getElementById('weatherContent').innerHTML = hn + hy;
     }
 
+    // --- Data Parsing ---
     function parseCSV(text) {
         const rows = [];
         const lines = text.split(/\r?\n/);
@@ -293,111 +272,99 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px; color:#5f6368;">Đang đồng bộ dữ liệu hệ thống...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">Đang tải dữ liệu...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK + "&cache=" + Date.now()).then(r => r.text()),
                 fetch(URL_PRICE + "&cache=" + Date.now()).then(r => r.text()),
                 fetch(URL_SPECS + "&cache=" + Date.now()).then(r => r.text())
             ]);
-            const stockRows = parseCSV(csvStock);
-            const priceRows = parseCSV(csvPrice);
-            const specRows = parseCSV(csvSpecs);
             
-            let stockMap = {};
-            stockRows.forEach(cols => { 
-                if (cols[0] && cols[0] !== "Mã") {
-                    stockMap[cols[0]] = cols[3] ? cols[3].trim() : "0"; 
-                }
-            });
-
-            let specMap = {};
-            specRows.forEach(cols => { if (cols[0]) specMap[cols[0]] = cols[2]; });
+            const stockMap = {};
+            parseCSV(csvStock).forEach(cols => { if(cols[0]) stockMap[cols[0]] = cols[3] || "0"; });
+            const specMap = {};
+            parseCSV(csvSpecs).forEach(cols => { if(cols[0]) specMap[cols[0]] = cols[2]; });
             
             masterData = [];
-            priceGroups = {}; 
-            priceRows.forEach((cols) => {
+            priceGroups = {};
+            parseCSV(csvPrice).forEach((cols, idx) => {
                 const ma = cols[0];
-                const giaRaw = cols[5] ? cols[5].replace(/[^0-9]/g, '') : "0";
-                const gia = parseInt(giaRaw);
-                const km = cols[8] ? cols[8].replace(/^"|"$/g, '') : "-";
-                
-                const tonGoc = stockMap[ma] || "0";
-                const tonSo = parseInt(tonGoc.replace(/[^0-9]/g, '')) || 0;
-                
-                const coHang = tonSo > 0 || tonGoc.toLowerCase().includes("có");
-
-                if (ma && gia > 0 && coHang) {
-                    masterData.push({ 
-                        id: masterData.length, 
-                        ma, 
-                        ten: cols[1], 
-                        ton: tonGoc, 
-                        gia, 
-                        km, 
-                        thongSo: specMap[ma] || "Đang cập nhật..." 
+                const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
+                if (ma && gia > 0 && idx > 0) {
+                    masterData.push({
+                        id: masterData.length,
+                        ma, ten: cols[1],
+                        ton: stockMap[ma] || "0",
+                        gia,
+                        km: cols[8]?.replace(/^"|"$/g, '') || "-",
+                        thongSo: specMap[ma] || "Đang cập nhật..."
                     });
                     if (!priceGroups[ma]) priceGroups[ma] = [];
-                    if (!priceGroups[ma].includes(gia)) priceGroups[ma].push(gia);
+                    priceGroups[ma].push(gia);
                 }
             });
-            Object.keys(priceGroups).forEach(ma => { priceGroups[ma].sort((a, b) => a - b); });
-            updateKMList(masterData);
+            updateKMDropdown();
             filterTable();
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;color:red;">Lỗi kết nối dữ liệu! Vui lòng làm mới lại trang.</td></tr>'; }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Lỗi tải dữ liệu!</td></tr>'; }
     }
 
-    function renderTable(data) {
-        const tbody = document.getElementById('tableBody');
-        let html = ''; let lastMa = ''; let isGray = false;
-        data.forEach(item => {
-            if (item.ma !== lastMa) { isGray = !isGray; lastMa = item.ma; }
-            const rowClass = isGray ? 'row-gray' : 'row-white';
-            const selectedClass = selectedIndices.has(item.id) ? 'selected-row' : '';
-            const priceClass = getPriceClass(item.ma, item.gia);
-            html += `<tr class="${rowClass} ${selectedClass}">
-                <td style="text-align:center"><input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} onclick="toggleSelect(${item.id})"></td>
-                <td>
-                    <div style="font-weight:600; color:var(--text);">${item.ten}</div>
-                    <span class="ma-sp">${item.ma}</span>
-                    <span class="specs-text">${item.thongSo}</span>
-                </td>
-                <td style="text-align:center;font-weight:bold;color:var(--primary)">${isHidden ? '***' : item.ton}</td>
-                <td class="${priceClass}">${item.gia.toLocaleString('vi-VN')}đ</td>
-                <td class="km-label">${item.km !== "-" ? item.km : ""}</td>
-            </tr>`;
+    // --- Filter & UI Logic ---
+    function updateKMDropdown() {
+        const kmSet = new Set();
+        masterData.forEach(i => { if(i.km !== "-") kmSet.add(i.km); });
+        let html = `<div class="km-option-item" style="border-bottom:1px solid #eee">
+            <label><input type="checkbox" onchange="toggleAllKMs(this)"> <b>CHỌN TẤT CẢ</b></label>
+        </div>`;
+        Array.from(kmSet).sort().forEach(km => {
+            html += `<div class="km-option-item">
+                <label><input type="checkbox" class="km-checkbox" value="${km}" onchange="handleKMChange()"> ${km}</label>
+            </div>`;
         });
-        tbody.innerHTML = html;
-        updateSelectionUI();
+        document.getElementById('kmDropdown').innerHTML = html;
     }
 
-    function getPriceClass(ma, gia) {
-        const group = priceGroups[ma];
-        if (!group || group.length <= 1) return "price-normal";
-        if (gia === group[group.length - 1]) return "price-high";
-        if (gia === group[0]) return "price-low";
-        return "price-mid";
+    function toggleKMDropdown() {
+        const d = document.getElementById('kmDropdown');
+        d.style.display = d.style.display === 'block' ? 'none' : 'block';
     }
 
-    function updateSelectionUI() {
-        const count = selectedIndices.size;
-        document.getElementById('selectedCount').innerText = count;
-        document.getElementById('btnCombo').style.display = count >= 2 ? 'inline-block' : 'none';
-        const btn = document.getElementById('btnToggleAll');
-        if (count > 0 && count === filteredData.length) { btn.innerText = "BỎ CHỌN TẤT CẢ"; btn.classList.add('active'); }
-        else { btn.innerText = "CHỌN TẤT CẢ"; btn.classList.remove('active'); }
+    function handleKMChange() {
+        selectedKMs.clear();
+        document.querySelectorAll('.km-checkbox:checked').forEach(cb => selectedKMs.add(cb.value));
+        const count = selectedKMs.size;
+        document.getElementById('kmLabel').innerText = count > 0 ? `Đã chọn ${count} chương trình` : "Tất cả chương trình";
+        filterTable();
+    }
+
+    function toggleAllKMs(master) {
+        document.querySelectorAll('.km-checkbox').forEach(cb => cb.checked = master.checked);
+        handleKMChange();
     }
 
     function filterTable() {
         const q = document.getElementById('searchBox').value.toLowerCase();
-        const kmFilter = document.getElementById('filterKM').value;
-        document.getElementById('clearSearch').style.display = q.length > 0 ? "block" : "none";
+        document.getElementById('clearSearch').style.display = q ? "block" : "none";
         filteredData = masterData.filter(i => {
-            const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q);
-            const matchKM = kmFilter === "" || i.km === kmFilter;
+            const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q);
+            const matchKM = selectedKMs.size === 0 || selectedKMs.has(i.km);
             return matchSearch && matchKM;
         });
         renderTable(filteredData);
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = data.map(item => `
+            <tr class="${selectedIndices.has(item.id) ? 'selected-row' : ''}">
+                <td style="text-align:center"><input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} onclick="toggleSelect(${item.id})"></td>
+                <td><b>${item.ten}</b><br><span class="ma-sp">${item.ma}</span><span class="specs-text">${item.thongSo}</span></td>
+                <td style="text-align:center">${item.ton}</td>
+                <td class="price-normal">${item.gia.toLocaleString()}đ</td>
+                <td class="km-label">${item.km === "-" ? "" : item.km}</td>
+            </tr>
+        `).join('');
+        document.getElementById('selectedCount').innerText = selectedIndices.size;
+        document.getElementById('btnCombo').style.display = selectedIndices.size >= 2 ? 'block' : 'none';
     }
 
     function toggleSelect(id) {
@@ -406,103 +373,39 @@
         renderTable(filteredData);
     }
 
-    function handleToggleSelect() {
-        if (selectedIndices.size === filteredData.length && filteredData.length > 0) selectedIndices.clear();
-        else filteredData.forEach(item => selectedIndices.add(item.id));
-        renderTable(filteredData);
+    // --- Copy Functions ---
+    function copyFullProgram() {
+        if (filteredData.length === 0) return alert("Không có sản phẩm nào để gửi!");
+        let text = `📣 GÓI CHƯƠNG TRÌNH VIỆT TUẤN\n📅 Ngày: ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`;
+        filteredData.forEach((i, idx) => {
+            text += `${idx + 1}. ${i.ten.toUpperCase()}\n   - Mã: ${i.ma}\n   - Giá: ${i.gia.toLocaleString()}đ\n`;
+            if (i.km !== "-") text += `   - KM: ${i.km}\n`;
+            text += `\n`;
+        });
+        navigator.clipboard.writeText(text).then(() => alert("Đã copy toàn bộ chương trình đang lọc!"));
     }
 
-    function toggleStock() { isHidden = !isHidden; document.getElementById('btnHide').innerText = isHidden ? "HIỆN TỒN" : "ẨN TỒN"; renderTable(filteredData); }
-    
-    function updateKMList(data) { 
-        const filterKM = document.getElementById('filterKM'); 
-        const kmSet = new Set(); 
-        data.forEach(item => { if (item.km && item.km !== "-") kmSet.add(item.km); }); 
-        let html = '<option value="">-- Tất cả chương trình --</option>'; 
-        Array.from(kmSet).sort().forEach(km => { html += `<option value="${km}">${km}</option>`; }); 
-        filterKM.innerHTML = html; 
+    function showQuote() {
+        if (selectedIndices.size === 0) return alert("Chọn sản phẩm!");
+        const items = masterData.filter(i => selectedIndices.has(i.id));
+        document.getElementById('quoteBody').innerHTML = items.map(i => `<div style="padding:10px; border-bottom:1px solid #eee"><b>${i.ten}</b> - <span style="color:red">${i.gia.toLocaleString()}đ</span></div>`).join('');
+        document.getElementById('quoteOverlay').style.display = 'flex';
     }
-    
-    function showQuote() { 
-        if (selectedIndices.size === 0) return alert("Vui lòng chọn ít nhất 1 sản phẩm!"); 
-        const items = masterData.filter(i => selectedIndices.has(i.id)); 
-        document.getElementById('quoteBody').innerHTML = items.map(i => `
-            <tr style="border-bottom: 1px solid #f1f3f4;">
-                <td style="padding:12px 5px;">
-                    <div style="font-weight:600;">${i.ten}</div>
-                    <div style="font-size:11px;color:#5f6368;margin-top:3px;">${i.thongSo}</div>
-                </td>
-                <td style="text-align:right; font-weight:bold; color:var(--danger); padding:10px;">
-                    ${i.gia.toLocaleString('vi-VN')}đ
-                </td>
-                <td style="font-size:12px; color:var(--success); text-align:right; padding:10px;">
-                    ${i.km !== "-" ? i.km : ""}
-                </td>
-            </tr>`).join(''); 
-        document.getElementById('quoteDate').innerText = "Thời gian: " + new Date().toLocaleString('vi-VN'); 
-        document.getElementById('quoteOverlay').style.display = 'flex'; 
+
+    function copyToZalo() {
+        const items = masterData.filter(i => selectedIndices.has(i.id));
+        let text = `BÁO GIÁ VIỆT TUẤN\n`;
+        items.forEach((i, idx) => text += `${idx + 1}. ${i.ten}: ${i.gia.toLocaleString()}đ\n`);
+        navigator.clipboard.writeText(text).then(() => alert("Đã copy báo giá lẻ!"));
     }
-    
-    function copyToZalo() { 
-        const items = masterData.filter(i => selectedIndices.has(i.id)); 
-        let text = `📣 BÁO GIÁ VIỆT TUẤN - ${new Date().toLocaleDateString('vi-VN')}\n--------------------------\n`; 
-        
-        items.forEach((item, index) => { 
-            text += `${index + 1}. ${item.ten.toUpperCase()}\n`; 
-            text += `   - Mã hàng: ${item.ma}\n`;
-            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`; 
-            if (item.km !== "-") {
-                text += `   - Chương trình: ${item.km}\n`;
-            }
-        }); 
-        
-        text += `--------------------------`;
-        navigator.clipboard.writeText(text).then(() => alert("Đã sao chép báo giá lẻ!")); 
-    }
-    
-    function openComboModal() { 
-        const items = masterData.filter(i => selectedIndices.has(i.id)); 
-        document.getElementById('comboItemsList').innerHTML = items.map(item => `
-            <div class="combo-item-row">
-                <span style="font-size:13px; font-weight:500; color:#3c4043;">${item.ten}</span>
-                <input type="number" class="combo-qty" data-id="${item.id}" value="1" min="1">
-            </div>`).join(''); 
-        document.getElementById('comboOverlay').style.display = 'flex'; 
-    }
-    
-    function generateComboZalo() { 
-        const name = document.getElementById('comboName').value || "COMBO HOT"; 
-        const items = masterData.filter(i => selectedIndices.has(i.id)); 
-        const qtyInputs = document.querySelectorAll('.combo-qty'); 
-        let total = 0; 
-        let text = `🔥 ${name.toUpperCase()} 🔥\n`;
-        text += `📅 Ngày: ${new Date().toLocaleDateString('vi-VN')}\n`;
-        text += `--------------------------\n`; 
-        
-        items.forEach((item, index) => { 
-            const qtyInput = Array.from(qtyInputs).find(input => input.dataset.id == item.id);
-            const qty = parseInt(qtyInput.value) || 1; 
-            total += item.gia * qty; 
-            
-            text += `${index + 1}. ${item.ten} (x${qty})\n`; 
-            text += `   - Mã hàng: ${item.ma}\n`;
-            text += `   - Giá: ${item.gia.toLocaleString('vi-VN')}đ\n`;
-            if (item.km !== "-") {
-                text += `   - Chương trình: ${item.km}\n`;
-            }
-        }); 
-        
-        text += `--------------------------\n`;
-        text += `💰 TỔNG TIỀN GÓI: ${total.toLocaleString('vi-VN')}đ`; 
-        
-        navigator.clipboard.writeText(text).then(() => { 
-            alert("Đã sao chép Combo!"); 
-            closeModal('comboOverlay'); 
-        }); 
-    }
-    
+
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function clearSearchInput() { document.getElementById('searchBox').value = ""; filterTable(); }
+    
+    // Đóng dropdown khi bấm ra ngoài
+    window.onclick = function(e) {
+        if (!e.target.closest('.km-dropdown-wrapper')) document.getElementById('kmDropdown').style.display = 'none';
+    };
 </script>
 </body>
 </html>
