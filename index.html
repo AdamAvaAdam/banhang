@@ -15,30 +15,30 @@
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .action-bar { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .search-wrapper { position: relative; flex: 2; min-width: 250px; }
-        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; }
+        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; box-sizing: border-box; }
         .km-dropdown-wrapper { position: relative; flex: 1; min-width: 200px; }
-        .btn-km-select { width: 100%; padding: 11px; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; }
+        .btn-km-select { width: 100%; padding: 11px; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .km-options { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid var(--border); border-radius: 8px; z-index: 1100; max-height: 300px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .km-option-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; }
+        .km-option-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f1f3f4; }
         .km-option-item:hover { background: var(--bg); }
         button { padding: 11px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; color: white; background: #5f6368; }
         .btn-toggle-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
-        .btn-toggle-all.active { background: var(--primary); color: white; }
+        .btn-toggle-all.active { background: var(--primary); color: white; border-color: var(--primary); }
         .btn-full-program { background: var(--purple); }
         .btn-quote { background: var(--warning); color: #202124; }
         .btn-refresh { background: var(--success); }
-        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
+        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        thead th { background: #f8f9fa; padding: 15px 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); color: #5f6368; sticky; top: 0; }
-        td { padding: 15px 12px; border-bottom: 1px solid var(--bg); font-size: 14px; }
-        tr:hover { background: #f1f3f4; }
+        thead th { background: #f8f9fa; padding: 15px 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); color: #5f6368; position: sticky; top: 0; }
+        td { padding: 15px 12px; border-bottom: 1px solid var(--bg); font-size: 14px; vertical-align: middle; }
+        tr:hover { background: #f8f9fa; }
         .selected-row { background: #e8f0fe !important; }
-        .ma-sp { color: #80868b; font-size: 11px; display: block; margin-top: 4px; }
+        .ma-sp { color: #80868b; font-size: 11px; display: block; font-family: monospace; margin-top: 4px; }
         .specs-text { font-size: 12px; color: #5f6368; margin-top: 4px; font-style: italic; display: block; }
-        .price-text { color: var(--danger); font-weight: 700; }
+        .price-text { color: var(--danger); font-weight: 700; font-size: 15px; }
         .km-label { color: var(--success); font-weight: 500; font-size: 13px; }
-        .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .quote-modal { background: white; width: 90%; max-width: 600px; padding: 25px; border-radius: 16px; }
+        .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .quote-modal { background: white; width: 95%; max-width: 600px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
     </style>
 </head>
@@ -49,7 +49,7 @@
 <div class="container">
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm tên, mã, thông số..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Tìm tên hàng, mã, thông số kỹ thuật..." onkeyup="filterTable()">
         </div>
         <div class="km-dropdown-wrapper">
             <button class="btn-km-select" onclick="toggleKMDropdown()"><span id="kmLabel">Lọc chương trình</span><span>▼</span></button>
@@ -80,7 +80,7 @@
 <div id="quoteOverlay" class="quote-overlay">
     <div class="quote-modal">
         <h2 style="color:var(--primary); margin-top:0;">XEM TRƯỚC BÁO GIÁ</h2>
-        <div id="quoteBody" style="max-height:400px; overflow-y:auto; margin-bottom:15px; border:1px solid #eee; padding:10px;"></div>
+        <div id="quoteBody" style="max-height:400px; overflow-y:auto; margin-bottom:15px; border:1px solid #eee; padding:10px; border-radius: 8px;"></div>
         <div style="display: flex; gap: 10px;">
             <button onclick="closeModal()" style="background:#dadce0; color: #3c4043; flex:1">ĐÓNG</button>
             <button onclick="copyToZalo()" style="background:var(--zalo); flex:2">COPY GỬI ZALO</button>
@@ -114,35 +114,47 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">Đang tải dữ liệu...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px; color:#666;">⏳ Đang đồng bộ dữ liệu hệ thống...</td></tr>';
         try {
+            const timestamp = Date.now();
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
-                fetch(URL_STOCK + "&c=" + Date.now()).then(r => r.text()),
-                fetch(URL_PRICE + "&c=" + Date.now()).then(r => r.text()),
-                fetch(URL_SPECS + "&c=" + Date.now()).then(r => r.text())
+                fetch(`${URL_STOCK}&nocache=${timestamp}`).then(r => r.text()),
+                fetch(`${URL_PRICE}&nocache=${timestamp}`).then(r => r.text()),
+                fetch(`${URL_SPECS}&nocache=${timestamp}`).then(r => r.text())
             ]);
-            const stockMap = {}; parseCSV(csvStock).forEach(cols => { if(cols[0]) stockMap[cols[0]] = cols[3] || "0"; });
-            const specMap = {}; parseCSV(csvSpecs).forEach(cols => { if(cols[0]) specMap[cols[0]] = cols[2]; });
+            
+            const stockMap = {}; parseCSV(csvStock).forEach(cols => { if(cols[0]) stockMap[cols[0].trim()] = cols[3] || "0"; });
+            const specMap = {}; parseCSV(csvSpecs).forEach(cols => { if(cols[0]) specMap[cols[0].trim()] = cols[2]; });
             
             masterData = [];
-            parseCSV(csvPrice).forEach((cols, idx) => {
-                const ma = cols[0]; const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
+            const priceData = parseCSV(csvPrice);
+            priceData.forEach((cols, idx) => {
+                const ma = cols[0]?.trim(); 
+                const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (ma && gia > 0 && idx > 0) {
                     masterData.push({
-                        id: masterData.length, ma, ten: cols[1], ton: stockMap[ma] || "0",
-                        gia, km: cols[8]?.replace(/^"|"$/g, '') || "-", thongSo: specMap[ma] || ""
+                        id: masterData.length, ma, 
+                        ten: cols[1]?.replace(/^"|"$/g, '') || "Không tên", 
+                        ton: stockMap[ma] || "0",
+                        gia, 
+                        km: cols[8]?.replace(/^"|"$/g, '') || "-", 
+                        thongSo: specMap[ma] || ""
                     });
                 }
             });
-            updateKMDropdown(); filterTable();
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Lỗi kết nối!</td></tr>'; }
+            updateKMDropdown(); 
+            filterTable();
+        } catch (e) { 
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center; padding:50px;">❌ Lỗi kết nối dữ liệu! Vui lòng kiểm tra internet hoặc link Sheets.</td></tr>'; 
+        }
     }
 
     function updateKMDropdown() {
         const kmSet = new Set(); masterData.forEach(i => { if(i.km !== "-") kmSet.add(i.km); });
-        let html = `<div class="km-option-item"><label><input type="checkbox" onchange="toggleFilterAllKMs(this)"> <b>CHỌN TẤT CẢ</b></label></div>`;
+        let html = `<div class="km-option-item"><label style="cursor:pointer; width:100%; display:block;"><input type="checkbox" onchange="toggleFilterAllKMs(this)"> <b>CHỌN TẤT CẢ</b></label></div>`;
         Array.from(kmSet).sort().forEach(km => {
-            html += `<div class="km-option-item"><label><input type="checkbox" class="km-checkbox" value="${km}" onchange="handleKMFilterChange()"> ${km}</label></div>`;
+            html += `<div class="km-option-item"><label style="cursor:pointer; width:100%; display:block;"><input type="checkbox" class="km-checkbox" value="${km}" onchange="handleKMFilterChange()"> ${km}</label></div>`;
         });
         document.getElementById('kmDropdown').innerHTML = html;
     }
@@ -151,7 +163,7 @@
 
     function handleKMFilterChange() {
         selectedKMs.clear(); document.querySelectorAll('.km-checkbox:checked').forEach(cb => selectedKMs.add(cb.value));
-        document.getElementById('kmLabel').innerText = selectedKMs.size > 0 ? `Đã chọn (${selectedKMs.size})` : "Lọc chương trình";
+        document.getElementById('kmLabel').innerText = selectedKMs.size > 0 ? `Lọc: ${selectedKMs.size} CT` : "Lọc chương trình";
         filterTable();
     }
 
@@ -168,7 +180,12 @@
     }
 
     function renderTable(data) {
-        document.getElementById('tableBody').innerHTML = data.map(item => `
+        const tbody = document.getElementById('tableBody');
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">Không tìm thấy sản phẩm phù hợp.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(item => `
             <tr class="${selectedIndices.has(item.id) ? 'selected-row' : ''}">
                 <td style="text-align:center"><input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} onclick="toggleSelect(${item.id})"></td>
                 <td><b>${item.ten}</b><br><span class="ma-sp">${item.ma}</span><span class="specs-text">${item.thongSo}</span></td>
@@ -177,6 +194,7 @@
                 <td class="km-label">${item.km === "-" ? "" : item.km}</td>
             </tr>
         `).join('');
+        
         const btn = document.getElementById('btnSelectAll');
         const allSel = filteredData.length > 0 && filteredData.every(i => selectedIndices.has(i.id));
         btn.innerText = allSel ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
@@ -192,43 +210,49 @@
 
     function toggleSelect(id) { if (selectedIndices.has(id)) selectedIndices.delete(id); else selectedIndices.add(id); renderTable(filteredData); }
 
-    // --- LOGIC COPY MỚI ---
+    // --- LOGIC COPY ZALO ---
 
-    // 1. Gửi gói chương trình (Danh sách có tiêu đề chương trình, ẩn mã hàng)
     function copyFullProgram() {
         const selItems = masterData.filter(i => selectedIndices.has(i.id));
-        if (selItems.length === 0) return alert("Hãy tích chọn mã hàng!");
+        if (selItems.length === 0) return alert("Vui lòng tích chọn ít nhất 1 sản phẩm!");
         
-        let kmTitle = selectedKMs.size > 0 ? Array.from(selectedKMs).join(", ") : "Tổng hợp";
+        let kmTitle = selectedKMs.size > 0 ? Array.from(selectedKMs).join(", ") : "Ưu đãi";
         let text = `Báo giá Việt Tuấn\nChương trình: ${kmTitle}\n`;
         text += `--------------------------\n`;
         selItems.forEach((i, idx) => {
             text += `${idx + 1}. ${i.ten}\n💰 Giá: ${i.gia.toLocaleString()}đ\n\n`;
         });
-        text += `--------------------------\n👉 Liên hệ để nhận ưu đãi tốt nhất!`;
-        navigator.clipboard.writeText(text).then(() => alert("Đã copy gói chương trình!"));
+        text += `--------------------------\n👉 Liên hệ Việt Tuấn để nhận giá tốt nhất!`;
+        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Gói chương trình (Đã ẩn mã hàng)!"));
     }
 
-    // 2. Gửi báo giá lẻ (Dạng: Tên hàng - Giá - Nội dung chương trình)
     function copyToZalo() {
         const selItems = masterData.filter(i => selectedIndices.has(i.id));
         let text = `📣 BÁO GIÁ VIỆT TUẤN\n`;
         selItems.forEach((i, idx) => {
-            let kmText = i.km !== "-" ? ` (${i.km})` : "";
-            text += `${idx + 1}. ${i.ten} - ${i.gia.toLocaleString()}đ${kmText}\n`;
+            let kmLine = i.km !== "-" ? ` - ${i.km}` : "";
+            // Đúng cấu trúc: Tên hàng - Giá - Nội dung chương trình (trên cùng 1 dòng)
+            text += `${idx + 1}. ${i.ten} - ${i.gia.toLocaleString()}đ${kmLine}\n`;
         });
-        navigator.clipboard.writeText(text).then(() => alert("Đã copy báo giá lẻ!"));
+        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Báo giá lẻ (Định dạng 1 dòng)!"));
     }
 
     function showQuote() {
         const items = masterData.filter(i => selectedIndices.has(i.id));
-        if (items.length === 0) return alert("Chưa chọn hàng!");
-        document.getElementById('quoteBody').innerHTML = items.map(i => `<div><b>${i.ten}</b> - <span style="color:red">${i.gia.toLocaleString()}đ</span> <i>${i.km !== '-' ? '['+i.km+']' : ''}</i></div>`).join('');
+        if (items.length === 0) return alert("Vui lòng chọn sản phẩm!");
+        document.getElementById('quoteBody').innerHTML = items.map(i => `
+            <div style="padding:8px; border-bottom:1px solid #eee">
+                <b>${i.ten}</b> - <span style="color:red">${i.gia.toLocaleString()}đ</span> 
+                <br><small style="color:green">${i.km !== '-' ? i.km : ''}</small>
+            </div>`).join('');
         document.getElementById('quoteOverlay').style.display = 'flex';
     }
 
     function closeModal() { document.getElementById('quoteOverlay').style.display = 'none'; }
-    window.onclick = (e) => { if (!e.target.closest('.km-dropdown-wrapper')) document.getElementById('kmDropdown').style.display = 'none'; };
+    function clearSearchInput() { document.getElementById('searchBox').value = ""; filterTable(); }
+    window.onclick = (e) => { 
+        if (!e.target.closest('.km-dropdown-wrapper')) document.getElementById('kmDropdown').style.display = 'none'; 
+    };
 </script>
 </body>
 </html>
