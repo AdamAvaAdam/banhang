@@ -97,7 +97,7 @@
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = []; let filteredData = []; let selectedIndices = new Set(); let selectedKMs = new Set();
-    let showZeroStock = false; // Mặc định ẩn tồn 0
+    let showZeroStock = false;
 
     window.onload = loadData;
 
@@ -136,14 +136,14 @@
                 const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (ma && gia > 0 && idx > 0) {
                     const tonVal = stockMap[ma] || "0";
-                    // Chuyển đổi tồn về số để so sánh
-                    const tonNum = parseInt(tonVal.replace(/[^0-9]/g, '')) || 0;
+                    // Kiểm tra nếu tồn là số 0. Nếu là chữ (Ví dụ: "Có") thì không coi là 0.
+                    const isTrulyZero = tonVal.trim() === "0";
                     
                     masterData.push({
                         id: masterData.length, ma, 
                         ten: cols[1]?.replace(/^"|"$/g, '') || "Không tên", 
                         ton: tonVal,
-                        tonSo: tonNum,
+                        isZero: isTrulyZero,
                         gia, 
                         km: cols[8]?.replace(/^"|"$/g, '') || "-", 
                         thongSo: specMap[ma] || ""
@@ -189,8 +189,8 @@
         filteredData = masterData.filter(i => {
             const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q);
             const matchKM = selectedKMs.size === 0 || selectedKMs.has(i.km);
-            // Logic lọc tồn: Nếu showZeroStock là false, chỉ giữ lại những mã có tonSo > 0
-            const matchStock = showZeroStock ? true : i.tonSo > 0;
+            // Chỉ ẩn nếu showZeroStock = false VÀ sản phẩm đó có tồn bằng đúng số "0"
+            const matchStock = showZeroStock ? true : !i.isZero;
             return matchSearch && matchKM && matchStock;
         });
         renderTable(filteredData);
@@ -202,7 +202,7 @@
             <tr class="${selectedIndices.has(item.id) ? 'selected-row' : ''}">
                 <td style="text-align:center"><input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} onclick="toggleSelect(${item.id})"></td>
                 <td><b>${item.ten}</b><br><span class="ma-sp">${item.ma}</span><span class="specs-text">${item.thongSo}</span></td>
-                <td style="text-align:center"><b style="${item.tonSo === 0 ? 'color:#ccc' : 'color:var(--primary)'}">${item.ton}</b></td>
+                <td style="text-align:center"><b style="${item.isZero ? 'color:#ccc' : 'color:var(--primary)'}">${item.ton}</b></td>
                 <td class="price-text">${item.gia.toLocaleString()}đ</td>
                 <td class="km-label">${item.km === "-" ? "" : item.km}</td>
             </tr>
