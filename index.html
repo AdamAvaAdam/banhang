@@ -60,7 +60,7 @@
         <button id="btnStockToggle" class="btn-stock-toggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
         <button id="btnSelectAll" class="btn-toggle-all" onclick="handleToggleSelectAll()">CHỌN TẤT CẢ</button>
         <button class="btn-full-program" onclick="copyFullProgram()">GỬI GÓI CHƯƠNG TRÌNH</button>
-        <button class="btn-quote" onclick="showQuote()">BÁO GIÁ LẺ (<span id="selectedCount">0</span>)</button>
+        <button id="btnBaoGiaLe" class="btn-quote" onclick="showQuote()">BÁO GIÁ LẺ (<span id="selectedCount">0</span>)</button>
         <button class="btn-refresh" onclick="loadData()">LÀM MỚI</button>
     </div>
 
@@ -136,7 +136,6 @@
                 const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (ma && gia > 0 && idx > 0) {
                     const tonVal = stockMap[ma] || "0";
-                    // Kiểm tra nếu tồn là số 0. Nếu là chữ (Ví dụ: "Có") thì không coi là 0.
                     const isTrulyZero = tonVal.trim() === "0";
                     
                     masterData.push({
@@ -189,7 +188,6 @@
         filteredData = masterData.filter(i => {
             const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q);
             const matchKM = selectedKMs.size === 0 || selectedKMs.has(i.km);
-            // Chỉ ẩn nếu showZeroStock = false VÀ sản phẩm đó có tồn bằng đúng số "0"
             const matchStock = showZeroStock ? true : !i.isZero;
             return matchSearch && matchKM && matchStock;
         });
@@ -223,17 +221,32 @@
 
     function toggleSelect(id) { if (selectedIndices.has(id)) selectedIndices.delete(id); else selectedIndices.add(id); renderTable(filteredData); }
 
+    // --- LOGIC COPY ZALO GÓI CHƯƠNG TRÌNH (GOM THEO KHUYẾN MÃI) ---
     function copyFullProgram() {
         const selItems = masterData.filter(i => selectedIndices.has(i.id));
-        if (selItems.length === 0) return alert("Vui lòng tích chọn ít nhất 1 sản phẩm!");
-        let kmTitle = selectedKMs.size > 0 ? Array.from(selectedKMs).join(", ") : "Ưu đãi";
-        let text = `Báo giá Việt Tuấn\nChương trình: ${kmTitle}\n`;
-        text += `--------------------------\n`;
-        selItems.forEach((i, idx) => {
-            text += `${idx + 1}. ${i.ten}\n💰 Giá: ${i.gia.toLocaleString()}đ\n\n`;
+        if (selItems.length === 0) return alert("Vui lòng tích chọn sản phẩm!");
+
+        // Gom nhóm sản phẩm theo cột KM
+        const groups = {};
+        selItems.forEach(item => {
+            const key = item.km === "-" ? "Sản phẩm khác" : item.km;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
         });
-        text += `--------------------------\n👉 Liên hệ Việt Tuấn để nhận giá tốt nhất!`;
-        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Gói chương trình!"));
+
+        let fullText = `Báo giá Việt Tuấn\n`;
+        fullText += `📅 Ngày: ${new Date().toLocaleDateString('vi-VN')}\n`;
+        
+        for (const [kmName, items] of Object.entries(groups)) {
+            fullText += `\n--------------------------\n`;
+            fullText += `📣 Chương trình: ${kmName.toUpperCase()}\n`;
+            items.forEach((i, idx) => {
+                fullText += `${idx + 1}. ${i.ten} - ${i.gia.toLocaleString()}đ\n`;
+            });
+        }
+        
+        fullText += `\n--------------------------\n👉 Liên hệ Việt Tuấn để nhận giá tốt nhất!`;
+        navigator.clipboard.writeText(fullText).then(() => alert("✅ Đã copy Báo giá theo Gói chương trình!"));
     }
 
     function copyToZalo() {
