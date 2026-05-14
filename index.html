@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V12.0 - Ultimate Sales Tool</title>
+    <title>Bravo Sync V13.0 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -11,67 +11,67 @@
             --text: #202124; --border: #dadce0; --zalo: #0068ff;
         }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
-        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         
-        /* Weather Section */
-        .weather-bar { background: #fff; padding: 10px; display: flex; overflow-x: auto; gap: 15px; border-bottom: 1px solid var(--border); justify-content: center; }
-        .weather-item { text-align: center; min-width: 80px; font-size: 12px; border-right: 1px solid #eee; padding-right: 10px; }
-        .weather-item:last-child { border: none; }
-        .weather-temp { font-weight: bold; color: var(--danger); display: block; }
+        /* Header cực gọn */
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 8px; text-align: center; position: sticky; top: 0; z-index: 1100; font-size: 14px; }
+        
+        /* Thời tiết 2 khu vực */
+        .weather-bar { background: #fff; padding: 8px; display: flex; overflow-x: auto; gap: 10px; border-bottom: 1px solid var(--border); position: sticky; top: 35px; z-index: 1050; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .loc-group { display: flex; gap: 8px; border-right: 2px solid #ddd; padding-right: 10px; align-items: center; }
+        .loc-group:last-child { border: none; }
+        .loc-name { font-weight: bold; font-size: 11px; writing-mode: vertical-lr; transform: rotate(180deg); color: var(--primary); }
+        .weather-item { text-align: center; min-width: 65px; font-size: 11px; }
+        .weather-temp { font-weight: bold; color: var(--danger); }
 
         .container { padding: 10px; max-width: 1400px; margin: auto; }
         
-        /* Action Bar */
-        .action-bar { background: white; padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; position: sticky; top: 65px; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .search-wrapper { flex: 2; min-width: 250px; }
-        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; }
+        /* Thanh công cụ bay (Sticky) */
+        .action-bar { background: white; padding: 10px; border-radius: 0 0 12px 12px; border: 1px solid var(--border); border-top: none; margin-bottom: 15px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; position: sticky; top: 85px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .search-wrapper { flex: 2; min-width: 200px; }
+        #searchBox { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
         
-        button { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; display: flex; align-items: center; gap: 5px; font-size: 12px; }
-        .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
-        .btn-select-all.active { background: var(--primary); color: white; }
+        button { padding: 8px 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; font-size: 11px; white-space: nowrap; }
+        .btn-select-all.active { background: var(--primary); }
         .btn-zalo-program { background: var(--purple); }
         .btn-stock-toggle.active { background: var(--danger); }
 
         /* Table */
-        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        thead th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); color: #5f6368; }
-        td { padding: 12px; border-bottom: 1px solid #f1f1f1; font-size: 14px; cursor: pointer; }
-        tr:hover { background: #f8f9fa; }
+        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 850px; }
+        thead th { background: #f8f9fa; padding: 10px; text-align: left; font-size: 11px; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        td { padding: 10px; border-bottom: 1px solid #f1f1f1; font-size: 13px; cursor: pointer; }
         .selected-row { background: #e8f0fe !important; }
         
-        /* Footer Pad */
-        .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1001; }
+        /* Footer */
+        .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1100; font-size: 13px; }
         .total-price { color: var(--warning); font-size: 18px; font-weight: bold; }
-        .price-text { color: var(--danger); font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header"><h3>VIỆT TUẤN SALES PRO - V12</h3></div>
+<div class="header">VIỆT TUẤN SALES PRO - V13</div>
 
-<!-- Tính năng mới: Thời tiết 5 ngày -->
-<div class="weather-bar" id="weatherBar">Đang tải dự báo thời tiết...</div>
+<div class="weather-bar" id="weatherBar">Đang tải thời tiết Hà Nội & Hưng Yên...</div>
 
 <div class="container">
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm đa từ khóa (vd: panasonic 10kg)..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Gõ từ khóa..." onkeyup="filterTable()">
         </div>
-        <button id="btnSelectAll" class="btn-select-all" onclick="toggleSelectAll()">CHỌN TẤT CẢ</button>
-        <button id="btnStockToggle" class="btn-stock-toggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
-        <button class="btn-zalo-program" onclick="copyZaloByProgram()">GỬI THEO CHƯƠNG TRÌNH</button>
-        <button style="background: var(--success);" onclick="loadData()">LÀM MỚI</button>
+        <button id="btnSelectAll" onclick="toggleSelectAll()">CHỌN TẤT CẢ</button>
+        <button id="btnStockToggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
+        <button class="btn-zalo-program" onclick="copyZaloByProgram()">GỬI THEO CT</button>
+        <button style="background: var(--success);" onclick="loadData()">MỚI</button>
     </div>
 
     <div class="table-res">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50px; text-align:center;">CHỌN</th>
-                    <th>SẢN PHẨM & THÔNG SỐ</th>
-                    <th style="width: 80px; text-align:center;">TỒN</th>
-                    <th style="width: 140px;">GIÁ BÁN</th>
+                    <th style="width: 40px; text-align:center;">✓</th>
+                    <th style="width: 50%;">TÊN / MÃ / THÔNG SỐ</th>
+                    <th style="width: 60px; text-align:center;">TỒN</th>
+                    <th style="width: 120px;">GIÁ BÁN</th>
                     <th style="width: 150px;">CHƯƠNG TRÌNH</th>
                 </tr>
             </thead>
@@ -82,8 +82,8 @@
 
 <div class="footer-pad">
     <div>Đã chọn: <b id="selCount">0</b> mã</div>
-    <div>TÍNH NHÁP: <span class="total-price" id="totalPrice">0đ</span></div>
-    <button onclick="selectedIds.clear(); filterTable();" style="background:#444;">XÓA CHỌN</button>
+    <div>TỔNG: <span class="total-price" id="totalPrice">0đ</span></div>
+    <button onclick="selectedIds.clear(); filterTable();" style="background:#444;">XÓA</button>
 </div>
 
 <script>
@@ -91,28 +91,32 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
-    let masterData = [];
-    let filteredData = [];
-    let selectedIds = new Set();
-    let showZeroStock = false;
+    let masterData = [], filteredData = [], selectedIds = new Set(), showZeroStock = false;
 
-    window.onload = () => { loadData(); getFiveDayWeather(); };
+    window.onload = () => { loadData(); updateWeather(); };
 
-    // 1. TÍNH NĂNG THỜI TIẾT 5 NGÀY (Sử dụng Open-Meteo API miễn phí)
-    async function getFiveDayWeather() {
+    // TÍNH NĂNG THỜI TIẾT 2 KHU VỰC
+    async function updateWeather() {
+        const locations = [
+            { name: "HÀ NỘI", lat: 21.02, lon: 105.84 },
+            { name: "H.YÊN", lat: 20.65, lon: 106.05 }
+        ];
         try {
-            const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=21.0245&longitude=105.8412&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia%2FBangkok");
-            const data = await res.json();
-            let html = "";
-            for(let i=0; i<5; i++) {
-                const date = new Date(data.daily.time[i]).toLocaleDateString('vi-VN', {weekday: 'short', day: 'numeric'});
-                html += `<div class="weather-item">
-                            <span>${date}</span><br>
-                            <span class="weather-temp">${Math.round(data.daily.temperature_2m_min)}°-${Math.round(data.daily.temperature_2m_max)}°C</span>
-                         </div>`;
+            let fullHtml = "";
+            for (let loc of locations) {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
+                const data = await res.json();
+                let locHtml = `<div class="loc-group"><div class="loc-name">${loc.name}</div>`;
+                for(let i=0; i<5; i++) {
+                    const d = new Date(data.daily.time[i]);
+                    const dayLabel = i === 0 ? "Nay" : `${d.getDate()}/${d.getMonth()+1}`;
+                    locHtml += `<div class="weather-item"><span>${dayLabel}</span><br><span class="weather-temp">${Math.round(data.daily.temperature_2m_min)}°-${Math.round(data.daily.temperature_2m_max)}°</span></div>`;
+                }
+                locHtml += `</div>`;
+                fullHtml += locHtml;
             }
-            document.getElementById('weatherBar').innerHTML = html;
-        } catch (e) { document.getElementById('weatherBar').innerText = "Không tải được thời tiết."; }
+            document.getElementById('weatherBar').innerHTML = fullHtml;
+        } catch (e) { document.getElementById('weatherBar').innerText = "Lỗi tải thời tiết."; }
     }
 
     function parseCSV(text) {
@@ -165,22 +169,21 @@
                 <td><b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small></td>
                 <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
                 <td class="price-text">${i.gia.toLocaleString()}đ</td>
-                <td style="color:var(--success); font-size:12px;">${i.km !== '-' ? i.km : ''}</td>
+                <td style="color:var(--success); font-size:11px;">${i.km !== '-' ? i.km : ''}</td>
             </tr>
         `).join('');
         const allSel = filteredData.length > 0 && filteredData.every(i => selectedIds.has(i.id));
-        document.getElementById('btnSelectAll').innerText = allSel ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
+        document.getElementById('btnSelectAll').innerText = allSel ? "BỎ TẤT CẢ" : "CHỌN TẤT CẢ";
         document.getElementById('btnSelectAll').classList.toggle('active', allSel);
         updateFooter();
     }
 
-    function toggleSelect(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); filterTable(); }
+    function toggleSelect(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); renderTable(); }
 
-    // 2. TÍNH NĂNG CHỌN / BỎ CHỌN TẤT CẢ (Chỉ tác động lên hàng đang lọc)
     function toggleSelectAll() {
         const allSel = filteredData.every(i => selectedIds.has(i.id));
         filteredData.forEach(i => allSel ? selectedIds.delete(i.id) : selectedIds.add(i.id));
-        filterTable();
+        renderTable();
     }
 
     function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').classList.toggle('active', showZeroStock); filterTable(); }
@@ -191,28 +194,21 @@
         document.getElementById('totalPrice').innerText = selItems.reduce((s, i) => s + i.gia, 0).toLocaleString() + 'đ';
     }
 
-    // 3. TÍNH NĂNG COPY ZALO THEO CHƯƠNG TRÌNH
     function copyZaloByProgram() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
-        if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
-        
+        if (selItems.length === 0) return alert("Chọn sản phẩm!");
         const groups = {};
         selItems.forEach(i => {
             const groupName = i.km === "-" ? "SẢN PHẨM KHÁC" : i.km;
             if (!groups[groupName]) groups[groupName] = [];
             groups[groupName].push(i);
         });
-
-        let txt = "📣 BÁO GIÁ VIỆT TUẤN\n📅 Ngày: " + new Date().toLocaleDateString('vi-VN') + "\n";
+        let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         for (const [km, items] of Object.entries(groups)) {
-            txt += `\n--------------------------\n🔥 ${km.toUpperCase()}\n`;
-            items.forEach((item, idx) => {
-                txt += `${idx + 1}. ${item.ten} - ${item.gia.toLocaleString()}đ\n`;
-            });
+            txt += `\n🔥 ${km.toUpperCase()}\n`;
+            items.forEach((item, idx) => { txt += `${idx + 1}. ${item.ten} - ${item.gia.toLocaleString()}đ\n`; });
         }
-        txt += `\n--------------------------\n👉 Liên hệ em để nhận chiết khấu tốt nhất!`;
-        
-        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá theo chương trình!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá!"));
     }
 </script>
 </body>
