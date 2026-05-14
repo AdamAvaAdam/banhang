@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V13.0 - Personal Pro</title>
+    <title>Bravo Sync V14.0 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -11,56 +11,45 @@
             --text: #202124; --border: #dadce0; --zalo: #0068ff;
         }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 6px; text-align: center; position: sticky; top: 0; z-index: 1100; font-size: 13px; font-weight: bold; }
         
-        /* Header cực gọn */
-        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 8px; text-align: center; position: sticky; top: 0; z-index: 1100; font-size: 14px; }
-        
-        /* Thời tiết 2 khu vực */
-        .weather-bar { background: #fff; padding: 8px; display: flex; overflow-x: auto; gap: 10px; border-bottom: 1px solid var(--border); position: sticky; top: 35px; z-index: 1050; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .loc-group { display: flex; gap: 8px; border-right: 2px solid #ddd; padding-right: 10px; align-items: center; }
-        .loc-group:last-child { border: none; }
-        .loc-name { font-weight: bold; font-size: 11px; writing-mode: vertical-lr; transform: rotate(180deg); color: var(--primary); }
-        .weather-item { text-align: center; min-width: 65px; font-size: 11px; }
-        .weather-temp { font-weight: bold; color: var(--danger); }
+        .weather-bar { background: #fff; padding: 6px; display: flex; overflow-x: auto; gap: 8px; border-bottom: 1px solid var(--border); position: sticky; top: 31px; z-index: 1050; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 40px; align-items: center; }
+        .loc-group { display: flex; gap: 6px; border-right: 2px solid #eee; padding-right: 8px; }
+        .loc-name { font-weight: bold; font-size: 10px; writing-mode: vertical-lr; transform: rotate(180deg); color: var(--primary); }
+        .weather-item { text-align: center; min-width: 60px; font-size: 10px; line-height: 1.2; }
+        .weather-temp { font-weight: bold; color: var(--danger); display: block; margin-top: 2px; }
 
-        .container { padding: 10px; max-width: 1400px; margin: auto; }
-        
-        /* Thanh công cụ bay (Sticky) */
-        .action-bar { background: white; padding: 10px; border-radius: 0 0 12px 12px; border: 1px solid var(--border); border-top: none; margin-bottom: 15px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; position: sticky; top: 85px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .search-wrapper { flex: 2; min-width: 200px; }
+        .container { padding: 8px; max-width: 1400px; margin: auto; }
+        .action-bar { background: white; padding: 8px; border-radius: 0 0 10px 10px; border: 1px solid var(--border); border-top: none; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; position: sticky; top: 83px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .search-wrapper { flex: 2; min-width: 180px; }
         #searchBox { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
         
-        button { padding: 8px 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; font-size: 11px; white-space: nowrap; }
-        .btn-select-all.active { background: var(--primary); }
+        button { padding: 8px 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; font-size: 11px; }
+        .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
+        .btn-select-all.active { background: var(--danger); color: white; border-color: var(--danger); }
         .btn-zalo-program { background: var(--purple); }
-        .btn-stock-toggle.active { background: var(--danger); }
 
-        /* Table */
-        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 850px; }
+        .table-res { background: white; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; margin-top: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         thead th { background: #f8f9fa; padding: 10px; text-align: left; font-size: 11px; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 10; }
         td { padding: 10px; border-bottom: 1px solid #f1f1f1; font-size: 13px; cursor: pointer; }
         .selected-row { background: #e8f0fe !important; }
         
-        /* Footer */
-        .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1100; font-size: 13px; }
+        .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 1100; }
         .total-price { color: var(--warning); font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V13</div>
-
-<div class="weather-bar" id="weatherBar">Đang tải thời tiết Hà Nội & Hưng Yên...</div>
+<div class="header">VIỆT TUẤN SALES PRO - V14</div>
+<div class="weather-bar" id="weatherBar">⏳ Đang lấy dữ liệu HN & HY...</div>
 
 <div class="container">
     <div class="action-bar">
-        <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Gõ từ khóa..." onkeyup="filterTable()">
-        </div>
-        <button id="btnSelectAll" onclick="toggleSelectAll()">CHỌN TẤT CẢ</button>
-        <button id="btnStockToggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
-        <button class="btn-zalo-program" onclick="copyZaloByProgram()">GỬI THEO CT</button>
+        <div class="search-wrapper"><input type="text" id="searchBox" placeholder="Tìm theo tên, mã, thông số..." onkeyup="filterTable()"></div>
+        <button id="btnSelectAll" class="btn-select-all" onclick="handleToggleAll()">CHỌN TẤT CẢ</button>
+        <button id="btnStockToggle" onclick="toggleZeroStock()" style="background:#424242">TỒN > 0</button>
+        <button class="btn-zalo-program" onclick="copyZaloByProgram()">GỬI ZALO</button>
         <button style="background: var(--success);" onclick="loadData()">MỚI</button>
     </div>
 
@@ -69,10 +58,10 @@
             <thead>
                 <tr>
                     <th style="width: 40px; text-align:center;">✓</th>
-                    <th style="width: 50%;">TÊN / MÃ / THÔNG SỐ</th>
-                    <th style="width: 60px; text-align:center;">TỒN</th>
+                    <th style="width: 50%;">SẢN PHẨM</th>
+                    <th style="width: 70px; text-align:center;">TỒN</th>
                     <th style="width: 120px;">GIÁ BÁN</th>
-                    <th style="width: 150px;">CHƯƠNG TRÌNH</th>
+                    <th style="width: 150px;">KHUYẾN MÃI</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -83,7 +72,7 @@
 <div class="footer-pad">
     <div>Đã chọn: <b id="selCount">0</b> mã</div>
     <div>TỔNG: <span class="total-price" id="totalPrice">0đ</span></div>
-    <button onclick="selectedIds.clear(); filterTable();" style="background:#444;">XÓA</button>
+    <button onclick="selectedIds.clear(); filterTable();" style="background:#d93025; font-size:10px;">XÓA HẾT</button>
 </div>
 
 <script>
@@ -95,28 +84,26 @@
 
     window.onload = () => { loadData(); updateWeather(); };
 
-    // TÍNH NĂNG THỜI TIẾT 2 KHU VỰC
+    // SỬA LỖI THỜI TIẾT NaN
     async function updateWeather() {
-        const locations = [
-            { name: "HÀ NỘI", lat: 21.02, lon: 105.84 },
-            { name: "H.YÊN", lat: 20.65, lon: 106.05 }
-        ];
+        const locations = [{ name: "HÀ NỘI", lat: 21.02, lon: 105.84 }, { name: "H.YÊN", lat: 20.65, lon: 106.05 }];
         try {
             let fullHtml = "";
             for (let loc of locations) {
                 const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok`);
                 const data = await res.json();
+                if (!data.daily) throw new Error("No data");
                 let locHtml = `<div class="loc-group"><div class="loc-name">${loc.name}</div>`;
                 for(let i=0; i<5; i++) {
-                    const d = new Date(data.daily.time[i]);
-                    const dayLabel = i === 0 ? "Nay" : `${d.getDate()}/${d.getMonth()+1}`;
-                    locHtml += `<div class="weather-item"><span>${dayLabel}</span><br><span class="weather-temp">${Math.round(data.daily.temperature_2m_min)}°-${Math.round(data.daily.temperature_2m_max)}°</span></div>`;
+                    const minT = data.daily.temperature_2m_min[i];
+                    const maxT = data.daily.temperature_2m_max[i];
+                    const label = i === 0 ? "Nay" : new Date(data.daily.time[i]).toLocaleDateString('vi-VN', {day:'numeric', month:'numeric'});
+                    locHtml += `<div class="weather-item"><span>${label}</span><br><span class="weather-temp">${Math.round(minT)}°-${Math.round(maxT)}°</span></div>`;
                 }
-                locHtml += `</div>`;
-                fullHtml += locHtml;
+                fullHtml += locHtml + `</div>`;
             }
             document.getElementById('weatherBar').innerHTML = fullHtml;
-        } catch (e) { document.getElementById('weatherBar').innerText = "Lỗi tải thời tiết."; }
+        } catch (e) { document.getElementById('weatherBar').innerText = "Đang kết nối lại thời tiết..."; setTimeout(updateWeather, 5000); }
     }
 
     function parseCSV(text) {
@@ -133,24 +120,21 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:100px;">⏳ Đang đồng bộ...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
-                fetch(URL_STOCK).then(r => r.text()),
-                fetch(URL_PRICE).then(r => r.text()),
-                fetch(URL_SPECS).then(r => r.text())
+                fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
             ]);
             const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [c[0]?.trim(), c[3]]));
             const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [c[0]?.trim(), c[2]]));
             masterData = parseCSV(csvPrice).slice(1).map((cols, idx) => {
-                const ma = cols[0]?.trim();
-                const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
+                const ma = cols[0]?.trim(); const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (!ma || gia <= 0) return null;
                 const ton = stockMap[ma] || "0";
                 return { id: idx, ma, gia, ton, ten: cols[1]?.replace(/^"|"$/g, ''), km: cols[8]?.replace(/^"|"$/g, '') || "-", isZero: ton.trim()==="0", thongSo: specMap[ma] || "" };
             }).filter(i => i);
             filterTable();
-        } catch (e) { tbody.innerHTML = '❌ Lỗi kết nối!'; }
+        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu!'; }
     }
 
     function filterTable() {
@@ -168,25 +152,33 @@
                 <td style="text-align:center"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
                 <td><b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small></td>
                 <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
-                <td class="price-text">${i.gia.toLocaleString()}đ</td>
+                <td style="color:var(--danger); font-weight:bold;">${i.gia.toLocaleString()}đ</td>
                 <td style="color:var(--success); font-size:11px;">${i.km !== '-' ? i.km : ''}</td>
             </tr>
         `).join('');
+        const btn = document.getElementById('btnSelectAll');
         const allSel = filteredData.length > 0 && filteredData.every(i => selectedIds.has(i.id));
-        document.getElementById('btnSelectAll').innerText = allSel ? "BỎ TẤT CẢ" : "CHỌN TẤT CẢ";
-        document.getElementById('btnSelectAll').classList.toggle('active', allSel);
+        btn.innerText = allSel ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
+        btn.classList.toggle('active', allSel);
         updateFooter();
     }
 
     function toggleSelect(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); renderTable(); }
 
-    function toggleSelectAll() {
-        const allSel = filteredData.every(i => selectedIds.has(i.id));
-        filteredData.forEach(i => allSel ? selectedIds.delete(i.id) : selectedIds.add(i.id));
+    // SỬA LOGIC CHỌN / BỎ CHỌN TỔNG THỂ
+    function handleToggleAll() {
+        const allSelInFilter = filteredData.every(i => selectedIds.has(i.id));
+        if (allSelInFilter) {
+            // Nếu đã chọn hết những mã đang hiển thị -> Nhấn là BỎ CHỌN TOÀN BỘ hệ thống
+            selectedIds.clear();
+        } else {
+            // Nếu chưa chọn hết -> CHỌN thêm những mã đang hiển thị
+            filteredData.forEach(i => selectedIds.add(i.id));
+        }
         renderTable();
     }
 
-    function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').classList.toggle('active', showZeroStock); filterTable(); }
+    function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').innerText = showZeroStock ? "TẤT CẢ TỒN" : "TỒN > 0"; filterTable(); }
 
     function updateFooter() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
