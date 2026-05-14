@@ -3,59 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V10.0 - Personal Pro</title>
+    <title>Bravo Sync V11.0 - Personal Sales Tool</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
             --warning: #f9ab00; --purple: #8e24aa; --bg: #f8f9fa;
             --text: #202124; --border: #dadce0; --zalo: #0068ff;
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
         .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 10px; max-width: 1400px; margin: auto; }
         
         /* Action Bar */
         .action-bar { background: white; padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; position: sticky; top: 65px; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .search-wrapper { flex: 2; min-width: 200px; }
-        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        .search-wrapper { flex: 2; min-width: 250px; }
+        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; }
         
-        button { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; display: flex; align-items: center; gap: 5px; }
+        button { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; display: flex; align-items: center; gap: 5px; font-size: 13px; }
         .btn-compare { background: var(--purple); }
-        .btn-quote { background: var(--warning); color: #202124; }
+        .btn-quote { background: var(--zalo); }
         .btn-stock-toggle.active { background: var(--danger); }
 
-        /* Table */
+        /* Table Style */
         .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        thead th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); sticky; top: 0; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        tr:hover { background: #f1f3f4; }
+        thead th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); color: #5f6368; }
+        td { padding: 12px; border-bottom: 1px solid #f1f1f1; font-size: 14px; cursor: pointer; }
+        tr:hover { background: #f8f9fa; }
         .selected-row { background: #e8f0fe !important; }
         
-        /* Modal So Sánh */
-        .compare-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
-        .compare-modal { background: white; width: 95%; max-width: 1000px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
-        .compare-content { overflow: auto; padding: 20px; flex: 1; }
-        .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .compare-card { border: 1px solid var(--border); padding: 15px; border-radius: 10px; background: #fff; }
-        .compare-header { padding: 15px; background: var(--purple); color: white; display: flex; justify-content: space-between; align-items: center; }
+        /* Sticky Footer (Scratchpad) */
+        .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1001; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); }
+        .total-price { color: var(--warning); font-size: 20px; font-weight: bold; }
 
-        .price { color: var(--danger); font-weight: bold; font-size: 16px; }
-        .spec-item { font-size: 12px; color: #555; background: #f0f0f0; padding: 4px 8px; border-radius: 4px; display: inline-block; margin: 2px; }
+        /* Compare Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-box { background: white; width: 95%; max-width: 1000px; max-height: 85vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-content { padding: 20px; overflow-y: auto; flex: 1; }
+        
+        .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .compare-card { border: 1px solid var(--border); padding: 15px; border-radius: 12px; position: relative; }
+        .card-price { color: var(--danger); font-weight: bold; font-size: 18px; margin: 10px 0; }
+        .card-spec { font-size: 12px; color: #5f6368; line-height: 1.4; border-top: 1px dashed #ddd; pt: 10px; margin-top: 10px; }
+
+        .price-text { color: var(--danger); font-weight: bold; }
+        .stock-badge { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="header"><h3>VIỆT TUẤN - TRA CỨU CÁ NHÂN</h3></div>
+<div class="header"><h3>VIỆT TUẤN SALES PRO - V11</h3></div>
 
 <div class="container">
     <div class="action-bar">
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm 'tên máy 10kg inverter'..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Gõ từ khóa (vd: panasonic 10kg)..." onkeyup="filterTable()">
         </div>
         <button id="btnStockToggle" class="btn-stock-toggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
-        <button class="btn-compare" onclick="showCompare()">SO SÁNH (<span id="compareCount">0</span>)</button>
-        <button class="btn-quote" onclick="copyZalo()">GỬI ZALO</button>
+        <button class="btn-compare" onclick="showCompare()">SO SÁNH (<span id="selCount1">0</span>)</button>
+        <button class="btn-quote" onclick="copyZalo()">COPY ZALO</button>
         <button style="background: var(--success);" onclick="loadData()">LÀM MỚI</button>
     </div>
 
@@ -66,7 +73,7 @@
                     <th style="width: 50px; text-align:center;">CHỌN</th>
                     <th>SẢN PHẨM & THÔNG SỐ</th>
                     <th style="width: 80px; text-align:center;">TỒN</th>
-                    <th style="width: 130px;">GIÁ BÁN</th>
+                    <th style="width: 140px;">GIÁ BÁN</th>
                     <th style="width: 150px;">CHƯƠNG TRÌNH</th>
                 </tr>
             </thead>
@@ -75,20 +82,27 @@
     </div>
 </div>
 
+<!-- Bộ nhớ tạm dưới chân trang -->
+<div class="footer-pad">
+    <div>Đã chọn: <b id="selCount2">0</b> sản phẩm</div>
+    <div>TỔNG TÍNH NHÁP: <span class="total-price" id="totalPrice">0đ</span></div>
+    <button onclick="clearSelection()" style="background:#444; font-size: 11px;">XÓA CHỌN</button>
+</div>
+
 <!-- Modal So Sánh -->
-<div id="compareOverlay" class="compare-overlay">
-    <div class="compare-modal">
-        <div class="compare-header">
-            <h3 style="margin:0">BẢNG SO SÁNH NHANH</h3>
-            <button onclick="closeCompare()" style="background:rgba(255,255,255,0.2)">ĐÓNG [X]</button>
+<div id="compareModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 style="margin:0">SO SÁNH SẢN PHẨM</h3>
+            <button onclick="closeCompare()" style="background:#eee; color:#333">ĐÓNG</button>
         </div>
-        <div class="compare-content" id="compareContent"></div>
+        <div class="modal-content" id="compareContent"></div>
     </div>
 </div>
 
 <script>
-    const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
+    const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = [];
@@ -97,77 +111,127 @@
 
     window.onload = loadData;
 
+    function parseCSV(text) {
+        return text.split(/\r?\n/).filter(line => line.trim()).map(line => {
+            let res = [], curr = '', q = false;
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] === '"') q = !q;
+                else if (line[i] === ',' && !q) { res.push(curr.trim()); curr = ''; }
+                else curr += line[i];
+            }
+            res.push(curr.trim()); return res;
+        });
+    }
+
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">⏳ Đang tải vũ khí cá nhân...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:100px;">⏳ Đang đồng bộ dữ liệu...</td></tr>';
         try {
-            const [rStock, rPrice, rSpecs] = await Promise.all([
+            const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()),
                 fetch(URL_PRICE).then(r => r.text()),
                 fetch(URL_SPECS).then(r => r.text())
             ]);
 
-            const stockMap = Object.fromEntries(parseCSV(rStock).map(c => [c[0], c[3]]));
-            const specMap = Object.fromEntries(parseCSV(rSpecs).map(c => [c[0], c[2]]));
+            const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [c[0]?.trim(), c[3]]));
+            const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [c[0]?.trim(), c[2]]));
             
-            masterData = parseCSV(rPrice).slice(1).map((cols, idx) => {
+            masterData = parseCSV(csvPrice).slice(1).map((cols, idx) => {
                 const ma = cols[0]?.trim();
                 const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (!ma || gia <= 0) return null;
                 const ton = stockMap[ma] || "0";
                 return {
                     id: idx, ma, gia, ton,
-                    ten: cols[1]?.replace(/^"|"$/g, ''),
+                    ten: cols[1]?.replace(/^"|"$/g, '') || "Không tên",
                     km: cols[8]?.replace(/^"|"$/g, '') || "-",
-                    isZero: ton.trim() === "0",
+                    isZero: ton.trim() === "0" || ton.trim() === "",
                     thongSo: specMap[ma] || ""
                 };
             }).filter(i => i);
             filterTable();
-        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu!'; }
+        } catch (e) { tbody.innerHTML = '❌ Lỗi kết nối dữ liệu!'; }
     }
 
-    function parseCSV(t) {
-        return t.split('\n').map(row => {
-            let res = [], curr = '', q = false;
-            for (let c of row) {
-                if (c === '"') q = !q;
-                else if (c === ',' && !q) { res.push(curr.trim()); curr = ''; }
-                else curr += c;
-            }
-            res.push(curr.trim()); return res;
-        });
-    }
-
-    // TÍNH NĂNG 1: SMART SEARCH (Tìm đa từ khóa)
+    // TÍNH NĂNG 1: TÌM KIẾM ĐA TỪ KHÓA
     function filterTable() {
-        const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(w => w);
+        const input = document.getElementById('searchBox').value.toLowerCase();
+        const keywords = input.split(" ").filter(k => k);
+        
         const filtered = masterData.filter(i => {
-            const content = (i.ten + i.ma + i.thongSo).toLowerCase();
-            const matchSearch = words.every(w => content.includes(w));
+            const target = (i.ten + i.ma + i.thongSo + i.km).toLowerCase();
+            const matchSearch = keywords.every(k => target.includes(k));
             const matchStock = showZeroStock ? true : !i.isZero;
             return matchSearch && matchStock;
         });
-        render(filtered);
+        renderTable(filtered);
     }
 
-    function render(data) {
-        document.getElementById('tableBody').innerHTML = data.map(i => `
-            <tr class="${selectedIds.has(i.id) ? 'selected-row' : ''}" onclick="toggleRow(${i.id})">
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = data.map(i => `
+            <tr class="${selectedIds.has(i.id) ? 'selected-row' : ''}" onclick="toggleSelect(${i.id})">
                 <td style="text-align:center"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
-                <td><b>${i.ten}</b><br><small style="color:#666">${i.ma}</small><br><small style="font-style:italic">${i.thongSo.substring(0, 80)}...</small></td>
-                <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
-                <td class="price">${i.gia.toLocaleString()}đ</td>
-                <td style="color:var(--success); font-size:12px">${i.km}</td>
+                <td>
+                    <b>${i.ten}</b><br>
+                    <small style="color:#888; font-family:monospace;">${i.ma}</small>
+                    <div style="font-size:11px; color:#666; margin-top:4px;">${i.thongSo.substring(0, 100)}</div>
+                </td>
+                <td style="text-align:center">
+                    <span class="stock-badge" style="background:${i.isZero?'#eee':'#e8f0fe'}; color:${i.isZero?'#999':'var(--primary)'}">
+                        ${i.ton}
+                    </span>
+                </td>
+                <td class="price-text">${i.gia.toLocaleString()}đ</td>
+                <td style="color:var(--success); font-size:12px; font-weight:500;">${i.km !== '-' ? i.km : ''}</td>
             </tr>
         `).join('');
-        document.getElementById('compareCount').innerText = selectedIds.size;
+        updateFooter();
     }
 
-    function toggleRow(id) {
+    function toggleSelect(id) {
         if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+        filterTable(); // Render lại để cập nhật class
+    }
+
+    // TÍNH NĂNG 3: BỘ NHỚ TẠM & TÍNH TỔNG
+    function updateFooter() {
+        const items = masterData.filter(i => selectedIds.has(i.id));
+        const total = items.reduce((sum, i) => sum + i.gia, 0);
+        document.getElementById('selCount1').innerText = selectedIds.size;
+        document.getElementById('selCount2').innerText = selectedIds.size;
+        document.getElementById('totalPrice').innerText = total.toLocaleString() + 'đ';
+    }
+
+    function clearSelection() {
+        selectedIds.clear();
         filterTable();
     }
+
+    // TÍNH NĂNG 2: SO SÁNH SẢN PHẨM
+    function showCompare() {
+        const items = masterData.filter(i => selectedIds.has(i.id));
+        if (items.length === 0) return alert("Chọn sản phẩm để so sánh!");
+        
+        document.getElementById('compareContent').innerHTML = `
+            <div class="compare-grid">
+                ${items.map(i => `
+                    <div class="compare-card">
+                        <div style="font-size:11px; color:#999;">${i.ma}</div>
+                        <div style="font-weight:bold; height:40px; overflow:hidden; margin-bottom:10px;">${i.ten}</div>
+                        <div class="card-price">${i.gia.toLocaleString()}đ</div>
+                        <div style="margin-bottom:10px;"><span class="stock-badge" style="background:#e8f0fe">Tồn: ${i.ton}</span></div>
+                        <div class="card-spec">
+                            <b>Thông số:</b><br>${i.thongSo || 'Chưa cập nhật'}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        document.getElementById('compareModal').style.display = 'flex';
+    }
+
+    function closeCompare() { document.getElementById('compareModal').style.display = 'none'; }
 
     function toggleZeroStock() {
         showZeroStock = !showZeroStock;
@@ -175,33 +239,16 @@
         filterTable();
     }
 
-    // TÍNH NĂNG 2: SO SÁNH SẢN PHẨM
-    function showCompare() {
-        const items = masterData.filter(i => selectedIds.has(i.id));
-        if (items.length < 1) return alert("Chọn ít nhất 1 SP để xem nhanh!");
-        
-        document.getElementById('compareContent').innerHTML = `
-            <div class="compare-grid">
-                ${items.map(i => `
-                    <div class="compare-card">
-                        <div style="color:var(--primary); font-weight:bold; margin-bottom:10px">${i.ma}</div>
-                        <div style="font-size:14px; height:40px; overflow:hidden; margin-bottom:10px"><b>${i.ten}</b></div>
-                        <div class="price" style="font-size:18px; margin-bottom:10px">${i.gia.toLocaleString()}đ</div>
-                        <div style="font-size:12px; background:#e8f0fe; padding:5px; border-radius:5px; margin-bottom:10px">Tồn: ${i.ton}</div>
-                        <div style="font-size:12px; color:#555"><b>Thông số:</b><br>${i.thongSo || 'Đang cập nhật'}</div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        document.getElementById('compareOverlay').style.display = 'flex';
-    }
-
-    function closeCompare() { document.getElementById('compareOverlay').style.display = 'none'; }
-
     function copyZalo() {
         const items = masterData.filter(i => selectedIds.has(i.id));
-        if (!items.length) return alert("Chưa chọn hàng!");
-        const txt = "BÁO GIÁ NHANH:\n" + items.map((i,idx) => `${idx+1}. ${i.ten} - ${i.gia.toLocaleString()}đ`).join("\n");
+        if (items.length === 0) return alert("Chọn sản phẩm!");
+        let txt = "📣 BÁO GIÁ NHANH:\n";
+        items.forEach((i, idx) => {
+            txt += `${idx + 1}. ${i.ten} - ${i.gia.toLocaleString()}đ\n`;
+        });
+        const total = items.reduce((sum, i) => sum + i.gia, 0);
+        if (items.length > 1) txt += `\n➡️ TỔNG CỘNG: ${total.toLocaleString()}đ`;
+        
         navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá!"));
     }
 </script>
