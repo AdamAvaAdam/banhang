@@ -1,278 +1,219 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V9.0 - Việt Tuấn Professional</title>
-    <style>
-        :root {
-            --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
-            --warning: #f9ab00; --combo: #e67c3e; --purple: #8e24aa; --bg: #f8f9fa;
-            --text: #202124; --border: #dadce0; --zalo: #0068ff;
-        }
-        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 40px; }
-        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 1000; }
-        .container { padding: 15px; max-width: 1300px; margin: auto; }
-        .action-bar { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .search-wrapper { position: relative; flex: 2; min-width: 250px; }
-        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; box-sizing: border-box; }
-        .km-dropdown-wrapper { position: relative; flex: 1; min-width: 200px; }
-        .btn-km-select { width: 100%; padding: 11px; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .km-options { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid var(--border); border-radius: 8px; z-index: 1100; max-height: 300px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .km-option-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f1f3f4; }
-        .km-option-item:hover { background: var(--bg); }
-        button { padding: 11px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; color: white; background: #5f6368; }
-        .btn-toggle-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
-        .btn-toggle-all.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .btn-full-program { background: var(--purple); }
-        .btn-stock-toggle { background: #424242; }
-        .btn-stock-toggle.active { background: var(--danger); }
-        .btn-quote { background: var(--warning); color: #202124; }
-        .btn-refresh { background: var(--success); }
-        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        thead th { background: #f8f9fa; padding: 15px 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); color: #5f6368; position: sticky; top: 0; }
-        td { padding: 15px 12px; border-bottom: 1px solid var(--bg); font-size: 14px; vertical-align: middle; }
-        tr:hover { background: #f8f9fa; }
-        .selected-row { background: #e8f0fe !important; }
-        .ma-sp { color: #80868b; font-size: 11px; display: block; font-family: monospace; margin-top: 4px; }
-        .specs-text { font-size: 12px; color: #5f6368; margin-top: 4px; font-style: italic; display: block; }
-        .price-text { color: var(--danger); font-weight: 700; font-size: 15px; }
-        .km-label { color: var(--success); font-weight: 500; font-size: 13px; }
-        .quote-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .quote-modal { background: white; width: 95%; max-width: 600px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bravo Sync V12.0 - Ultimate Sales Tool</title>
+    <style>
+        :root {
+            --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
+            --warning: #f9ab00; --purple: #8e24aa; --bg: #f8f9fa;
+            --text: #202124; --border: #dadce0; --zalo: #0068ff;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        
+        /* Weather Section */
+        .weather-bar { background: #fff; padding: 10px; display: flex; overflow-x: auto; gap: 15px; border-bottom: 1px solid var(--border); justify-content: center; }
+        .weather-item { text-align: center; min-width: 80px; font-size: 12px; border-right: 1px solid #eee; padding-right: 10px; }
+        .weather-item:last-child { border: none; }
+        .weather-temp { font-weight: bold; color: var(--danger); display: block; }
+
+        .container { padding: 10px; max-width: 1400px; margin: auto; }
+        
+        /* Action Bar */
+        .action-bar { background: white; padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; position: sticky; top: 65px; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .search-wrapper { flex: 2; min-width: 250px; }
+        #searchBox { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; }
+        
+        button { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; display: flex; align-items: center; gap: 5px; font-size: 12px; }
+        .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
+        .btn-select-all.active { background: var(--primary); color: white; }
+        .btn-zalo-program { background: var(--purple); }
+        .btn-stock-toggle.active { background: var(--danger); }
+
+        /* Table */
+        .table-res { background: white; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        thead th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 12px; border-bottom: 2px solid var(--border); color: #5f6368; }
+        td { padding: 12px; border-bottom: 1px solid #f1f1f1; font-size: 14px; cursor: pointer; }
+        tr:hover { background: #f8f9fa; }
+        .selected-row { background: #e8f0fe !important; }
+        
+        /* Footer Pad */
+        .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1001; }
+        .total-price { color: var(--warning); font-size: 18px; font-weight: bold; }
+        .price-text { color: var(--danger); font-weight: bold; }
+    </style>
 </head>
 <body>
 
-<div class="header"><h3>HỆ THỐNG TRA CỨU & BÁO GIÁ VIỆT TUẤN</h3></div>
+<div class="header"><h3>VIỆT TUẤN SALES PRO - V12</h3></div>
+
+<!-- Tính năng mới: Thời tiết 5 ngày -->
+<div class="weather-bar" id="weatherBar">Đang tải dự báo thời tiết...</div>
 
 <div class="container">
-    <div class="action-bar">
-        <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Tìm tên hàng, mã, thông số kỹ thuật..." onkeyup="filterTable()">
-        </div>
-        <div class="km-dropdown-wrapper">
-            <button class="btn-km-select" onclick="toggleKMDropdown()"><span id="kmLabel">Lọc chương trình</span><span>▼</span></button>
-            <div id="kmDropdown" class="km-options"></div>
-        </div>
-        <button id="btnStockToggle" class="btn-stock-toggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
-        <button id="btnSelectAll" class="btn-toggle-all" onclick="handleToggleSelectAll()">CHỌN TẤT CẢ</button>
-        <button class="btn-full-program" onclick="copyFullProgram()">GỬI GÓI CHƯƠNG TRÌNH</button>
-        <button id="btnBaoGiaLe" class="btn-quote" onclick="showQuote()">BÁO GIÁ LẺ (<span id="selectedCount">0</span>)</button>
-        <button class="btn-refresh" onclick="loadData()">LÀM MỚI</button>
-    </div>
+    <div class="action-bar">
+        <div class="search-wrapper">
+            <input type="text" id="searchBox" placeholder="Tìm đa từ khóa (vd: panasonic 10kg)..." onkeyup="filterTable()">
+        </div>
+        <button id="btnSelectAll" class="btn-select-all" onclick="toggleSelectAll()">CHỌN TẤT CẢ</button>
+        <button id="btnStockToggle" class="btn-stock-toggle" onclick="toggleZeroStock()">HIỆN TỒN 0</button>
+        <button class="btn-zalo-program" onclick="copyZaloByProgram()">GỬI THEO CHƯƠNG TRÌNH</button>
+        <button style="background: var(--success);" onclick="loadData()">LÀM MỚI</button>
+    </div>
 
-    <div class="table-res">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 50px; text-align:center;">CHỌN</th>
-                    <th style="width: 45%;">SẢN PHẨM & THÔNG SỐ</th>
-                    <th style="width: 80px; text-align:center;">TỒN</th>
-                    <th style="width: 140px;">GIÁ BÁN</th>
-                    <th style="width: 25%;">KHUYẾN MÃI</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
+    <div class="table-res">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px; text-align:center;">CHỌN</th>
+                    <th>SẢN PHẨM & THÔNG SỐ</th>
+                    <th style="width: 80px; text-align:center;">TỒN</th>
+                    <th style="width: 140px;">GIÁ BÁN</th>
+                    <th style="width: 150px;">CHƯƠNG TRÌNH</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </div>
 
-<div id="quoteOverlay" class="quote-overlay">
-    <div class="quote-modal">
-        <h2 style="color:var(--primary); margin-top:0;">XEM TRƯỚC BÁO GIÁ</h2>
-        <div id="quoteBody" style="max-height:400px; overflow-y:auto; margin-bottom:15px; border:1px solid #eee; padding:10px; border-radius: 8px;"></div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="closeModal()" style="background:#dadce0; color: #3c4043; flex:1">ĐÓNG</button>
-            <button onclick="copyToZalo()" style="background:var(--zalo); flex:2">COPY GỬI ZALO</button>
-        </div>
-    </div>
+<div class="footer-pad">
+    <div>Đã chọn: <b id="selCount">0</b> mã</div>
+    <div>TÍNH NHÁP: <span class="total-price" id="totalPrice">0đ</span></div>
+    <button onclick="selectedIds.clear(); filterTable();" style="background:#444;">XÓA CHỌN</button>
 </div>
 
 <script>
-    const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
-    const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
-    const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
+    const URL_STOCK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=656473693&single=true&output=csv";
+    const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
+    const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
-    let masterData = []; let filteredData = []; let selectedIndices = new Set(); let selectedKMs = new Set();
-    let showZeroStock = false;
+    let masterData = [];
+    let filteredData = [];
+    let selectedIds = new Set();
+    let showZeroStock = false;
 
-    window.onload = loadData;
+    window.onload = () => { loadData(); getFiveDayWeather(); };
 
-    function parseCSV(text) {
-        const rows = []; const lines = text.split(/\r?\n/);
-        lines.forEach(line => {
-            if (!line.trim()) return; const row = []; let curr = '', inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                let char = line[i];
-                if (char === '"') inQuotes = !inQuotes;
-                else if (char === ',' && !inQuotes) { row.push(curr.trim()); curr = ''; }
-                else curr += char;
-            }
-            row.push(curr.trim()); rows.push(row);
-        });
-        return rows;
-    }
+    // 1. TÍNH NĂNG THỜI TIẾT 5 NGÀY (Sử dụng Open-Meteo API miễn phí)
+    async function getFiveDayWeather() {
+        try {
+            const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=21.0245&longitude=105.8412&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia%2FBangkok");
+            const data = await res.json();
+            let html = "";
+            for(let i=0; i<5; i++) {
+                const date = new Date(data.daily.time[i]).toLocaleDateString('vi-VN', {weekday: 'short', day: 'numeric'});
+                html += `<div class="weather-item">
+                            <span>${date}</span><br>
+                            <span class="weather-temp">${Math.round(data.daily.temperature_2m_min)}°-${Math.round(data.daily.temperature_2m_max)}°C</span>
+                         </div>`;
+            }
+            document.getElementById('weatherBar').innerHTML = html;
+        } catch (e) { document.getElementById('weatherBar').innerText = "Không tải được thời tiết."; }
+    }
 
-    async function loadData() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px; color:#666;">⏳ Đang đồng bộ dữ liệu hệ thống...</td></tr>';
-        try {
-            const timestamp = Date.now();
-            const [csvStock, csvPrice, csvSpecs] = await Promise.all([
-                fetch(`${URL_STOCK}&nocache=${timestamp}`).then(r => r.text()),
-                fetch(`${URL_PRICE}&nocache=${timestamp}`).then(r => r.text()),
-                fetch(`${URL_SPECS}&nocache=${timestamp}`).then(r => r.text())
-            ]);
-            
-            const stockMap = {}; parseCSV(csvStock).forEach(cols => { if(cols[0]) stockMap[cols[0].trim()] = cols[3] || "0"; });
-            const specMap = {}; parseCSV(csvSpecs).forEach(cols => { if(cols[0]) specMap[cols[0].trim()] = cols[2]; });
-            
-            masterData = [];
-            parseCSV(csvPrice).forEach((cols, idx) => {
-                const ma = cols[0]?.trim(); 
-                const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
-                if (ma && gia > 0 && idx > 0) {
-                    const tonVal = stockMap[ma] || "0";
-                    const isTrulyZero = tonVal.trim() === "0";
-                    
-                    masterData.push({
-                        id: masterData.length, ma, 
-                        ten: cols[1]?.replace(/^"|"$/g, '') || "Không tên", 
-                        ton: tonVal,
-                        isZero: isTrulyZero,
-                        gia, 
-                        km: cols[8]?.replace(/^"|"$/g, '') || "-", 
-                        thongSo: specMap[ma] || ""
-                    });
-                }
-            });
-            updateKMDropdown(); 
-            filterTable();
-        } catch (e) { 
-            tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center; padding:50px;">❌ Lỗi kết nối dữ liệu!</td></tr>'; 
-        }
-    }
+    function parseCSV(text) {
+        return text.split(/\r?\n/).filter(line => line.trim()).map(line => {
+            let res = [], curr = '', q = false;
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] === '"') q = !q;
+                else if (line[i] === ',' && !q) { res.push(curr.trim()); curr = ''; }
+                else curr += line[i];
+            }
+            res.push(curr.trim()); return res;
+        });
+    }
 
-    function toggleZeroStock() {
-        showZeroStock = !showZeroStock;
-        const btn = document.getElementById('btnStockToggle');
-        btn.innerText = showZeroStock ? "ẨN TỒN 0" : "HIỆN TỒN 0";
-        btn.classList.toggle('active', showZeroStock);
-        filterTable();
-    }
+    async function loadData() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:100px;">⏳ Đang đồng bộ...</td></tr>';
+        try {
+            const [csvStock, csvPrice, csvSpecs] = await Promise.all([
+                fetch(URL_STOCK).then(r => r.text()),
+                fetch(URL_PRICE).then(r => r.text()),
+                fetch(URL_SPECS).then(r => r.text())
+            ]);
+            const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [c[0]?.trim(), c[3]]));
+            const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [c[0]?.trim(), c[2]]));
+            masterData = parseCSV(csvPrice).slice(1).map((cols, idx) => {
+                const ma = cols[0]?.trim();
+                const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
+                if (!ma || gia <= 0) return null;
+                const ton = stockMap[ma] || "0";
+                return { id: idx, ma, gia, ton, ten: cols[1]?.replace(/^"|"$/g, ''), km: cols[8]?.replace(/^"|"$/g, '') || "-", isZero: ton.trim()==="0", thongSo: specMap[ma] || "" };
+            }).filter(i => i);
+            filterTable();
+        } catch (e) { tbody.innerHTML = '❌ Lỗi kết nối!'; }
+    }
 
-    function updateKMDropdown() {
-        const kmSet = new Set(); masterData.forEach(i => { if(i.km !== "-") kmSet.add(i.km); });
-        let html = `<div class="km-option-item"><label style="cursor:pointer; width:100%; display:block;"><input type="checkbox" onchange="toggleFilterAllKMs(this)"> <b>CHỌN TẤT CẢ</b></label></div>`;
-        Array.from(kmSet).sort().forEach(km => {
-            html += `<div class="km-option-item"><label style="cursor:pointer; width:100%; display:block;"><input type="checkbox" class="km-checkbox" value="${km}" onchange="handleKMFilterChange()"> ${km}</label></div>`;
-        });
-        document.getElementById('kmDropdown').innerHTML = html;
-    }
+    function filterTable() {
+        const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(k => k);
+        filteredData = masterData.filter(i => {
+            const target = (i.ten + i.ma + i.thongSo + i.km).toLowerCase();
+            return words.every(k => target.includes(k)) && (showZeroStock ? true : !i.isZero);
+        });
+        renderTable();
+    }
 
-    function toggleKMDropdown() { const d = document.getElementById('kmDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+    function renderTable() {
+        document.getElementById('tableBody').innerHTML = filteredData.map(i => `
+            <tr class="${selectedIds.has(i.id) ? 'selected-row' : ''}" onclick="toggleSelect(${i.id})">
+                <td style="text-align:center"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
+                <td><b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small></td>
+                <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
+                <td class="price-text">${i.gia.toLocaleString()}đ</td>
+                <td style="color:var(--success); font-size:12px;">${i.km !== '-' ? i.km : ''}</td>
+            </tr>
+        `).join('');
+        const allSel = filteredData.length > 0 && filteredData.every(i => selectedIds.has(i.id));
+        document.getElementById('btnSelectAll').innerText = allSel ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
+        document.getElementById('btnSelectAll').classList.toggle('active', allSel);
+        updateFooter();
+    }
 
-    function handleKMFilterChange() {
-        selectedKMs.clear(); document.querySelectorAll('.km-checkbox:checked').forEach(cb => selectedKMs.add(cb.value));
-        document.getElementById('kmLabel').innerText = selectedKMs.size > 0 ? `Lọc: ${selectedKMs.size} CT` : "Lọc chương trình";
-        filterTable();
-    }
+    function toggleSelect(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); filterTable(); }
 
-    function toggleFilterAllKMs(master) { document.querySelectorAll('.km-checkbox').forEach(cb => cb.checked = master.checked); handleKMFilterChange(); }
+    // 2. TÍNH NĂNG CHỌN / BỎ CHỌN TẤT CẢ (Chỉ tác động lên hàng đang lọc)
+    function toggleSelectAll() {
+        const allSel = filteredData.every(i => selectedIds.has(i.id));
+        filteredData.forEach(i => allSel ? selectedIds.delete(i.id) : selectedIds.add(i.id));
+        filterTable();
+    }
 
-    function filterTable() {
-        const q = document.getElementById('searchBox').value.toLowerCase();
-        filteredData = masterData.filter(i => {
-            const matchSearch = i.ten.toLowerCase().includes(q) || i.ma.toLowerCase().includes(q) || i.thongSo.toLowerCase().includes(q);
-            const matchKM = selectedKMs.size === 0 || selectedKMs.has(i.km);
-            const matchStock = showZeroStock ? true : !i.isZero;
-            return matchSearch && matchKM && matchStock;
-        });
-        renderTable(filteredData);
-    }
+    function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').classList.toggle('active', showZeroStock); filterTable(); }
 
-    function renderTable(data) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = data.map(item => `
-            <tr class="${selectedIndices.has(item.id) ? 'selected-row' : ''}">
-                <td style="text-align:center"><input type="checkbox" ${selectedIndices.has(item.id) ? 'checked' : ''} onclick="toggleSelect(${item.id})"></td>
-                <td><b>${item.ten}</b><br><span class="ma-sp">${item.ma}</span><span class="specs-text">${item.thongSo}</span></td>
-                <td style="text-align:center"><b style="${item.isZero ? 'color:#ccc' : 'color:var(--primary)'}">${item.ton}</b></td>
-                <td class="price-text">${item.gia.toLocaleString()}đ</td>
-                <td class="km-label">${item.km === "-" ? "" : item.km}</td>
-            </tr>
-        `).join('');
-        
-        const btn = document.getElementById('btnSelectAll');
-        const allSel = filteredData.length > 0 && filteredData.every(i => selectedIndices.has(i.id));
-        btn.innerText = allSel ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
-        btn.className = allSel ? "btn-toggle-all active" : "btn-toggle-all";
-        document.getElementById('selectedCount').innerText = selectedIndices.size;
-    }
+    function updateFooter() {
+        const selItems = masterData.filter(i => selectedIds.has(i.id));
+        document.getElementById('selCount').innerText = selectedIds.size;
+        document.getElementById('totalPrice').innerText = selItems.reduce((s, i) => s + i.gia, 0).toLocaleString() + 'đ';
+    }
 
-    function handleToggleSelectAll() {
-        const allSel = filteredData.every(i => selectedIndices.has(i.id));
-        filteredData.forEach(i => allSel ? selectedIndices.delete(i.id) : selectedIndices.add(i.id));
-        renderTable(filteredData);
-    }
+    // 3. TÍNH NĂNG COPY ZALO THEO CHƯƠNG TRÌNH
+    function copyZaloByProgram() {
+        const selItems = masterData.filter(i => selectedIds.has(i.id));
+        if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
+        
+        const groups = {};
+        selItems.forEach(i => {
+            const groupName = i.km === "-" ? "SẢN PHẨM KHÁC" : i.km;
+            if (!groups[groupName]) groups[groupName] = [];
+            groups[groupName].push(i);
+        });
 
-    function toggleSelect(id) { if (selectedIndices.has(id)) selectedIndices.delete(id); else selectedIndices.add(id); renderTable(filteredData); }
-
-    // --- LOGIC COPY ZALO GÓI CHƯƠNG TRÌNH (GOM THEO KHUYẾN MÃI) ---
-    function copyFullProgram() {
-        const selItems = masterData.filter(i => selectedIndices.has(i.id));
-        if (selItems.length === 0) return alert("Vui lòng tích chọn sản phẩm!");
-
-        // Gom nhóm sản phẩm theo cột KM
-        const groups = {};
-        selItems.forEach(item => {
-            const key = item.km === "-" ? "Sản phẩm khác" : item.km;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(item);
-        });
-
-        let fullText = `Báo giá Việt Tuấn\n`;
-        fullText += `📅 Ngày: ${new Date().toLocaleDateString('vi-VN')}\n`;
-        
-        for (const [kmName, items] of Object.entries(groups)) {
-            fullText += `\n--------------------------\n`;
-            fullText += `📣 Chương trình: ${kmName.toUpperCase()}\n`;
-            items.forEach((i, idx) => {
-                fullText += `${idx + 1}. ${i.ten} - ${i.gia.toLocaleString()}đ\n`;
-            });
-        }
-        
-        fullText += `\n--------------------------\n👉 Liên hệ Việt Tuấn để nhận giá tốt nhất!`;
-        navigator.clipboard.writeText(fullText).then(() => alert("✅ Đã copy Báo giá theo Gói chương trình!"));
-    }
-
-    function copyToZalo() {
-        const selItems = masterData.filter(i => selectedIndices.has(i.id));
-        let text = `📣 BÁO GIÁ VIỆT TUẤN\n`;
-        selItems.forEach((i, idx) => {
-            let kmLine = i.km !== "-" ? ` - ${i.km}` : "";
-            text += `${idx + 1}. ${i.ten} - ${i.gia.toLocaleString()}đ${kmLine}\n`;
-        });
-        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Báo giá lẻ!"));
-    }
-
-    function showQuote() {
-        const items = masterData.filter(i => selectedIndices.has(i.id));
-        if (items.length === 0) return alert("Vui lòng chọn sản phẩm!");
-        document.getElementById('quoteBody').innerHTML = items.map(i => `
-            <div style="padding:8px; border-bottom:1px solid #eee">
-                <b>${i.ten}</b> - <span style="color:red">${i.gia.toLocaleString()}đ</span> 
-                <br><small style="color:green">${i.km !== '-' ? i.km : ''}</small>
-            </div>`).join('');
-        document.getElementById('quoteOverlay').style.display = 'flex';
-    }
-
-    function closeModal() { document.getElementById('quoteOverlay').style.display = 'none'; }
-    function clearSearchInput() { document.getElementById('searchBox').value = ""; filterTable(); }
-    window.onclick = (e) => { if (!e.target.closest('.km-dropdown-wrapper')) document.getElementById('kmDropdown').style.display = 'none'; };
+        let txt = "📣 BÁO GIÁ VIỆT TUẤN\n📅 Ngày: " + new Date().toLocaleDateString('vi-VN') + "\n";
+        for (const [km, items] of Object.entries(groups)) {
+            txt += `\n--------------------------\n🔥 ${km.toUpperCase()}\n`;
+            items.forEach((item, idx) => {
+                txt += `${idx + 1}. ${item.ten} - ${item.gia.toLocaleString()}đ\n`;
+            });
+        }
+        txt += `\n--------------------------\n👉 Liên hệ em để nhận chiết khấu tốt nhất!`;
+        
+        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá theo chương trình!"));
+    }
 </script>
 </body>
-</html> 
+</html>
