@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.0 - Personal Pro (Biến Động)</title>
+    <title>Bravo Sync V15.2 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -29,28 +29,65 @@
         .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
         .btn-select-all.active { background: var(--danger); color: white; border-color: var(--danger); }
         
-        /* Badge trạng thái biến động */
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; margin-left: 5px; }
-        .badge-new { background-color: var(--purple); }
-        .badge-up { background-color: var(--danger); }
-        .badge-down { background-color: var(--success); }
-        .badge-none { background-color: #757575; }
-        .date-text { font-size: 11px; color: #7f8c8d; font-weight: normal; }
-
-        .table-res { background: white; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; margin-top: 8px; }
+        .table-res { background: white; border-radius: 10px; border: 1px solid var(--border); margin-top: 8px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         thead th { background: #f8f9fa; padding: 10px; text-align: left; font-size: 11px; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 10; }
         td { padding: 10px; border-bottom: 1px solid #f1f1f1; font-size: 13px; cursor: pointer; }
         .selected-row { background: #e8f0fe !important; }
         .specs-text { font-size: 11px; color: #5f6368; margin-top: 4px; font-style: italic; display: block; line-height: 1.3; }
         
+        /* CSS Gộp dòng & Biến động chương trình mới */
+        .btn-expand { background: #e8f0fe; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-top: 4px; font-weight: bold; border: 1px solid #c2e7ff; }
+        .sub-row { background: #fafafa; display: none; }
+        .sub-row.open { display: table-row; }
+        .sub-table { width: 100%; border-collapse: collapse; background: #fff; margin: 5px 0; border: 1px dashed var(--border); }
+        .sub-table td { padding: 6px 10px; font-size: 12px; border-bottom: 1px solid #eee; }
+        
+        .badge { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: bold; color: white; margin-left: 4px; }
+        .badge-none { background: #757575; }
+        .badge-new { background: var(--purple); }
+        .badge-down { background: var(--success); }
+
         .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 1100; }
         .total-price { color: var(--warning); font-size: 18px; font-weight: bold; }
+
+        /* ================= CSS RESPONSIVE TỐI ƯU TUYỆT ĐỐI CHO MOBILE ================= */
+        @media screen and (max-width: 768px) {
+            .table-res { border: none; background: transparent; }
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; } /* Ẩn toàn bộ thanh tiêu đề bảng trên mobile */
+            
+            tbody tr[onclick^="toggleSelect"] {
+                background: white; margin-bottom: 10px; border-radius: 8px;
+                border: 1px solid var(--border); padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                position: relative;
+            }
+            tbody tr.selected-row { border-color: var(--primary); background: #f4f8fe !important; }
+            
+            td { border: none; padding: 4px 0; position: relative; width: 100% !important; text-align: left !important; }
+            
+            /* Tách cấu trúc hiển thị dạng Card */
+            td:nth-child(1) { width: auto !important; display: inline-block; margin-right: 8px; vertical-align: middle; }
+            td:nth-child(2) { display: inline; vertical-align: middle; }
+            td:nth-child(3) { display: block; font-size: 12px; margin-top: 6px; border-top: 1px dashed #eee; padding-top: 6px; }
+            td:nth-child(3)::before { content: "Tồn kho: "; color: #666; font-weight: normal; }
+            td:nth-child(4) { display: block; font-size: 14px; margin-top: 2px; }
+            td:nth-child(4)::before { content: "Giá đại diện: "; color: #666; font-size: 12px; font-weight: normal; }
+            td:nth-child(5) { display: none; } /* Ẩn cột KM gốc, dồn xuống dòng phụ */
+            
+            /* Cấu trúc mành xổ ra trên mobile */
+            .sub-row.open { display: block; background: #fdfdfd; padding: 5px; border: 1px dashed var(--primary); border-radius: 6px; margin-top: -5px; margin-bottom: 10px; }
+            .sub-table { border: none; }
+            .sub-table tr { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px solid #eee; }
+            .sub-table tr:last-child { border-bottom: none; }
+            .sub-table td { padding: 2px 5px !important; display: block !important; }
+            .sub-table td::before { font-weight: bold; color: #555; }
+        }
     </style>
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15.1 (ĐÁNH GIÁ CHƯƠNG TRÌNH)</div>
+<div class="header">VIỆT TUẤN SALES PRO - V15.2</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -58,7 +95,6 @@
         <div class="search-wrapper"><input type="text" id="searchBox" placeholder="Panasonic, 10kg, Inverter..." onkeyup="filterTable()"></div>
         <button id="btnSelectAll" class="btn-select-all" onclick="handleToggleAll()">CHỌN TẤT CẢ</button>
         <button onclick="toggleZeroStock()" id="btnStockToggle" style="background:#424242">HIỆN TỒN > 0</button>
-        <button onclick="toggleOnlyNew()" id="btnNewToggle" style="background:var(--primary)">TẤT CẢ CT</button>
         <button onclick="copyZaloByProgram()" style="background:var(--purple)">GỬI ZALO</button>
         <button onclick="loadData()" style="background:var(--success)">MỚI</button>
     </div>
@@ -68,11 +104,10 @@
             <thead>
                 <tr>
                     <th style="width: 40px; text-align:center;">✓</th>
-                    <th style="width: 40%;">SẢN PHẨM & THÔNG SỐ</th>
+                    <th style="width: 45%;">SẢN PHẨM & THÔNG SỐ</th>
                     <th style="width: 70px; text-align:center;">TỒN</th>
-                    <th style="width: 140px;">GIÁ BÁN & ĐÁNH GIÁ</th>
-                    <th style="width: 100px; text-align:center;">NGÀY CT</th>
-                    <th style="width: 20%;">KHUYẾN MÃI</th>
+                    <th style="width: 150px;">GIÁ BÁN ĐẠI DIỆN</th>
+                    <th style="width: 20%;">CHƯƠNG TRÌNH KHUYẾN MÃI TỔNG HỢP</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -91,7 +126,7 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
-    let masterData = [], filteredData = [], selectedIds = new Set(), showZeroStock = false, filterOnlyNew = false;
+    let masterData = [], filteredData = [], selectedIds = new Set(), showZeroStock = false, openSubRows = new Set();
 
     window.onload = () => { loadData(); updateWeather(); };
 
@@ -134,19 +169,9 @@
         });
     }
 
-    // Hàm phân tích định dạng ngày DD/MM/YY hoặc DD/MM/YYYY thành Object Date
-    function parseDateString(dateStr) {
-        if (!dateStr || dateStr === "-") return null;
-        const parts = dateStr.split('/');
-        if (parts.length !== 3) return null;
-        let day = parseInt(parts[0]), month = parseInt(parts[1]) - 1, year = parseInt(parts[2]);
-        if (year < 100) year += 2000; // Xử lý nếu định dạng năm là YY (ví dụ: 26 -> 2026)
-        return new Date(year, month, day);
-    }
-
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:80px;">⏳ Đang phân tích biến động chương trình...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & tối ưu dữ liệu...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
@@ -154,85 +179,111 @@
             const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [c[0]?.trim(), c[3]]));
             const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [c[0]?.trim(), c[2]]));
             
-            const rawPriceData = parseCSV(csvPrice).slice(1);
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const rawPriceRows = parseCSV(csvPrice).slice(1);
+            const groupedMap = {};
+            const todayStr = new Date().toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'});
 
-            masterData = rawPriceData.map((cols, idx) => {
+            rawPriceRows.forEach((cols, idx) => {
                 const ma = cols[0]?.trim(); 
                 const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
-                if (!ma || gia <= 0) return null;
-                
-                const ton = stockMap[ma] || "0";
-                const ngayHieuLucStr = cols[6]?.trim() || "-"; // Lấy dữ liệu ngày ở cột G (Index 6)
-                const ngayHieuLuc = parseDateString(ngayHieuLucStr);
-                
-                // Thuật toán Đánh giá trạng thái chương trình:
-                let danhGia = { code: "NONE", label: "➖ Không đổi", class: "badge-none" };
-                let isNewUpdated = false;
+                if (!ma || gia <= 0) return;
 
-                if (ngayHieuLuc) {
-                    const diffTime = Math.abs(today - ngayHieuLuc);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    // Nếu ngày áp dụng trùng hôm nay hoặc cách tối đa 2 ngày -> Đánh dấu có Cập nhật mới
-                    if (diffDays <= 2) {
-                        isNewUpdated = true;
-                        // Đọc giá trị chiết khấu/giảm giá ở cột E (Index 4) để đánh giá tăng/giảm uư đãi
-                        const chietKhau = parseInt(cols[4]?.replace(/[^0-9]/g, '')) || 0;
-                        
-                        if (chietKhau > 500000) { 
-                            // Nếu mức chiết khấu lớn (Ví dụ mẫu từ ảnh của bạn: 880k, 990k - Gói số lượng lớn)
-                            danhGia = { code: "DOWN", label: "📉 GIẢM SÂU", class: "badge-down" };
-                        } else {
-                            danhGia = { code: "NEW", label: "🆕 CT MỚI", class: "badge-new" };
-                        }
-                    }
+                const ton = stockMap[ma] || "0";
+                const kmText = cols[8]?.replace(/^"|"$/g, '') || "-";
+                const ngayHL = cols[6]?.trim() || "-";
+                const chietKhau = parseInt(cols[4]?.replace(/[^0-9]/g, '')) || 0;
+
+                // Thuật toán xác định biến động tăng/giảm dựa trên ngày hiệu lực & chiết khấu thương mại
+                let danhGia = { label: "Không đổi", class: "badge-none" };
+                if (ngayHL !== "-" && ngayHL.includes(todayStr.split('/')[0])) { // Khớp ngày hiện tại
+                    danhGia = chietKhau > 500000 ? { label: "📉 GIẢM SÂU", class: "badge-down" } : { label: "🆕 CT MỚI", class: "badge-new" };
                 }
 
-                return { 
-                    id: idx, ma, gia, ton, 
-                    ten: cols[1]?.replace(/^"|"$/g, ''), 
-                    km: cols[8]?.replace(/^"|"$/g, '') || "-", 
-                    isZero: ton.trim() === "0", 
-                    thongSo: specMap[ma] || "Đang cập nhật...",
-                    ngayCT: ngayHieuLucStr,
-                    isNewUpdated: isNewUpdated,
-                    danhGia: danhGia
-                };
-            }).filter(i => i);
-            
+                const chuongTrinhObj = { gia, km: kmText, ngay: ngayHL, danhGia };
+
+                if (!groupedMap[ma]) {
+                    groupedMap[ma] = {
+                        id: idx, ma, ton,
+                        ten: cols[1]?.replace(/^"|"$/g, ''),
+                        isZero: ton.trim() === "0",
+                        thongSo: specMap[ma] || "Đang cập nhật...",
+                        allPrograms: []
+                    };
+                }
+                groupedMap[ma].allPrograms.push(chuongTrinhObj);
+            });
+
+            // Sau khi gộp, chọn ra dòng Bán lẻ hoặc dòng có giá cao nhất làm đại diện trên dòng chính
+            masterData = Object.values(groupedMap).map(item => {
+                item.allPrograms.sort((a, b) => b.gia - a.gia); // Xếp giá cao nhất (bán lẻ) lên đầu
+                const defaultProg = item.allPrograms.find(p => p.km.toLowerCase().includes("lẻ")) || item.allPrograms[0];
+                item.giaDaiDien = defaultProg.gia;
+                item.kmDaiDien = defaultProg.km;
+                item.danhGiaDaiDien = defaultProg.danhGia;
+                return item;
+            });
+
             filterTable();
-        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu hoặc cấu trúc bảng thay đổi. Vui lòng thử lại!'; }
+        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu. Vui lòng thử lại!'; }
     }
 
     function filterTable() {
         const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(k => k);
         filteredData = masterData.filter(i => {
-            const target = (i.ten + i.ma + i.thongSo + i.km + i.danhGia.label).toLowerCase();
-            const matchSearch = words.every(k => target.includes(k));
-            const matchStock = showZeroStock ? true : !i.isZero;
-            const matchNew = filterOnlyNew ? i.isNewUpdated : true;
-            return matchSearch && matchStock && matchNew;
+            const target = (i.ten + i.ma + i.thongSo + i.kmDaiDien).toLowerCase();
+            return words.every(k => target.includes(k)) && (showZeroStock ? true : !i.isZero);
         });
         renderTable();
     }
 
     function renderTable() {
-        document.getElementById('tableBody').innerHTML = filteredData.map(i => `
-            <tr class="${selectedIds.has(i.id) ? 'selected-row' : ''}" onclick="toggleSelect(${i.id})">
-                <td style="text-align:center"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
-                <td><b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small><span class="specs-text">${i.thongSo}</span></td>
-                <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
-                <td>
-                    <span style="color:var(--danger); font-weight:bold;">${i.gia.toLocaleString()}đ</span><br>
-                    <span class="badge ${i.danhGia.class}">${i.danhGia.label}</span>
-                </td>
-                <td style="text-align:center;" class="date-text">${i.ngayCT}</td>
-                <td style="color:var(--success); font-size:11px;">${i.km !== '-' ? i.km : ''}</td>
-            </tr>
-        `).join('');
+        const tbody = document.getElementById('tableBody');
+        let html = "";
         
+        filteredData.forEach(i => {
+            const hasSub = i.allPrograms.length > 1;
+            const isSubOpen = openSubRows.has(i.id);
+            
+            html += `
+                <tr class="${selectedIds.has(i.id) ? 'selected-row' : ''}" onclick="toggleSelect(event, ${i.id})">
+                    <td style="text-align:center" onclick="event.stopPropagation(); toggleCheckbox(${i.id});"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
+                    <td>
+                        <b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small><span class="specs-text">${i.thongSo}</span>
+                        ${hasSub ? `<div class="btn-expand" onclick="event.stopPropagation(); toggleSubRow(${i.id})">${isSubOpen ? '🔼 ẨN CHƯƠNG TRÌNH PHỤ' : `🔽 XEM THÊM ${i.allPrograms.length - 1} CẤP GIÁ SỈ`}</div>` : ''}
+                    </td>
+                    <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
+                    <td>
+                        <span style="color:var(--danger); font-weight:bold;">${i.giaDaiDien.toLocaleString()}đ</span><br>
+                        <span class="badge ${i.danhGiaDaiDien.class}">${i.danhGiaDaiDien.label}</span>
+                    </td>
+                    <td style="color:var(--success); font-size:11px;">${i.kmDaiDien !== '-' ? i.kmDaiDien : ''}</td>
+                </tr>
+            `;
+
+            if (hasSub) {
+                html += `
+                    <tr class="sub-row ${isSubOpen ? 'open' : ''}">
+                        <td colspan="5" style="padding: 0 10px 10px 40px; cursor: default;" onclick="event.stopPropagation();">
+                            <table class="sub-table">
+                                <thead style="display:none;"><tr><th>Giá</th><th>Chương trình</th><th>Ngày</th><th>Biến động</th></tr></thead>
+                                <tbody>
+                                    ${i.allPrograms.map(p => `
+                                        <tr>
+                                            <td style="width:130px; font-weight:bold; color:var(--danger);">${p.gia.toLocaleString()}đ</td>
+                                            <td style="color:#333;">${p.km}</td>
+                                            <td style="width:80px; color:#666; text-align:center;">${p.ngay}</td>
+                                            <td style="width:100px;"><span class="badge ${p.danhGia.class}">${p.danhGia.label}</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        tbody.innerHTML = html;
         const btn = document.getElementById('btnSelectAll');
         const allSelInFilter = filteredData.length > 0 && filteredData.every(i => selectedIds.has(i.id));
         btn.innerText = allSelInFilter ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
@@ -240,40 +291,48 @@
         updateFooter();
     }
 
-    function toggleSelect(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); renderTable(); }
+    function toggleSelect(event, id) {
+        if (event.target.tagName === 'INPUT' || event.target.classList.contains('btn-expand')) return;
+        toggleCheckbox(id);
+    }
+
+    function toggleCheckbox(id) {
+        if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+        renderTable();
+    }
+
+    function toggleSubRow(id) {
+        if (openSubRows.has(id)) openSubRows.delete(id); else openSubRows.add(id);
+        renderTable();
+    }
 
     function handleToggleAll() {
         const allSelInFilter = filteredData.every(i => selectedIds.has(i.id));
-        if (allSelInFilter) { filteredData.forEach(i => selectedIds.delete(i.id)); } 
+        if (allSelInFilter) { filteredData.forEach(i => selectedIds.delete(i.id)); }
         else { filteredData.forEach(i => selectedIds.add(i.id)); }
         renderTable();
     }
 
     function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').innerText = showZeroStock ? "ẨN TỒN 0" : "HIỆN TỒN > 0"; filterTable(); }
-    
-    function toggleOnlyNew() { filterOnlyNew = !filterOnlyNew; document.getElementById('btnNewToggle').innerText = filterOnlyNew ? "CHỈ MỚI CẬP NHẬT" : "TẤT CẢ CT"; filterTable(); }
 
     function updateFooter() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
         document.getElementById('selCount').innerText = selectedIds.size;
-        document.getElementById('totalPrice').innerText = selItems.reduce((s, i) => s + i.gia, 0).toLocaleString() + 'đ';
+        document.getElementById('totalPrice').innerText = selItems.reduce((s, i) => s + i.giaDaiDien, 0).toLocaleString() + 'đ';
     }
 
     function copyZaloByProgram() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
         if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
-        const groups = {};
-        selItems.forEach(i => {
-            const groupName = i.km === "-" ? "SẢN PHẨM KHÁC" : i.km;
-            if (!groups[groupName]) groups[groupName] = [];
-            groups[groupName].push(i);
+        let txt = "📣 BÁO GIÁ VIỆT TUẤN (CẬP NHẬT CHƯƠNG TRÌNH)\n";
+        selItems.forEach((item, idx) => {
+            txt += `\n📌 ${idx + 1}. ${item.ten} (${item.ma})\n`;
+            txt += `   🔹 Tồn: ${item.ton} bộ\n`;
+            item.allPrograms.forEach(p => {
+                txt += `   • Giá: ${p.gia.toLocaleString()}đ -> CT: ${p.km} [${p.danhGia.label}]\n`;
+            });
         });
-        let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
-        for (const [km, items] of Object.entries(groups)) {
-            txt += `\n🔥 ${km.toUpperCase()}\n`;
-            items.forEach((item, idx) => { txt += `${idx + 1}. ${item.ten} - ${item.gia.toLocaleString()}đ (${item.danhGia.label})\n`; });
-        }
-        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá kèm biến động chương trình!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã copy toàn bộ báo giá và các gói sỉ lẻ!"));
     }
 </script>
 </body>
