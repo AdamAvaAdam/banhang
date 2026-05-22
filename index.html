@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.5 - Personal Pro</title>
+    <title>Bravo Sync V15.6 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -84,7 +84,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15.5</div>
+<div class="header">VIỆT TUẤN SALES PRO - V15.6</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -305,7 +305,7 @@
     }
 
     function handleToggleAll() {
-        const allSelInFilter = filteredData.every(i => selectedIds.has(i.id));
+        const allSelInFilter = filteredData.every(i => selectedIds.has(id));
         if (allSelInFilter) { filteredData.forEach(i => selectedIds.delete(i.id)); }
         else { filteredData.forEach(i => selectedIds.add(i.id)); }
         renderTable();
@@ -317,7 +317,7 @@
         document.getElementById('selCount').innerText = selectedIds.size;
     }
 
-    /* ĐÃ LOẠI BỎ TOÀN BỘ CÁC KÝ TỰ BIẾN ĐỘNG (Không đổi, CT mới, Giảm sâu) KHI XUẤT VĂN BẢN SANG ZALO */
+    /* HÀM XUẤT ZALO ĐÃ ĐƯỢC BỎ HOÀN TOÀN CHỮ [KHÔNG ĐỔI/BIẾN ĐỘNG] VÀ ẨN TUYỆT ĐỐI SỐ LƯỢNG HÀNG TỒN */
     function copyZaloByProgram() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
         if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
@@ -342,6 +342,7 @@
 
         let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         
+        // 1. Xuất văn bản theo cơ cấu Combo trộn mã công khai giá gói
         for (const [comboName, items] of Object.entries(comboGroups)) {
             txt += `\n🔥 CHƯƠNG TRÌNH: ${comboName}\n`;
             txt += `⚠️ (Áp dụng khi lấy đủ cơ cấu số lượng trộn gói)\n`;
@@ -350,17 +351,18 @@
             });
         }
 
+        // 2. Xuất văn bản các mã lẻ độc lập (Đã ẩn hoàn toàn phần hiển thị TỒN KHO)
         if (leItems.length > 0) {
             txt += `\n📌 CÁC MÃ HÀNG BÁN LẺ / CHƯƠNG TRÌNH RIÊNG:\n`;
             leItems.forEach((item, idx) => {
-                txt += `\n👉 ${idx + 1}. ${item.ten} (${item.ma}) - Tồn: ${item.ton} bộ\n`;
+                txt += `\n👉 ${idx + 1}. ${item.ten} (${item.ma})\n`;
                 item.allPrograms.forEach(p => {
                     txt += `   • Giá: ${p.gia.toLocaleString()}đ -> CT: ${p.km}\n`;
                 });
             });
         }
 
-        navigator.clipboard.writeText(txt).then(() => alert("Đã tối ưu hóa sạch văn bản và copy thành công!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá sạch (Đã ẩn Tồn kho & Nhãn biến động)!"));
     }
 </script>
 </body>
