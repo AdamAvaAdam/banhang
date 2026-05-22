@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.0 - Personal Pro</title>
+    <title>Bravo Sync V15.0 - Personal Pro (Biến Động)</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -29,6 +29,14 @@
         .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
         .btn-select-all.active { background: var(--danger); color: white; border-color: var(--danger); }
         
+        /* Badge trạng thái biến động */
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; margin-left: 5px; }
+        .badge-new { background-color: var(--purple); }
+        .badge-up { background-color: var(--danger); }
+        .badge-down { background-color: var(--success); }
+        .badge-none { background-color: #757575; }
+        .date-text { font-size: 11px; color: #7f8c8d; font-weight: normal; }
+
         .table-res { background: white; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; margin-top: 8px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         thead th { background: #f8f9fa; padding: 10px; text-align: left; font-size: 11px; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 10; }
@@ -42,7 +50,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15</div>
+<div class="header">VIỆT TUẤN SALES PRO - V15.1 (ĐÁNH GIÁ CHƯƠNG TRÌNH)</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -50,6 +58,7 @@
         <div class="search-wrapper"><input type="text" id="searchBox" placeholder="Panasonic, 10kg, Inverter..." onkeyup="filterTable()"></div>
         <button id="btnSelectAll" class="btn-select-all" onclick="handleToggleAll()">CHỌN TẤT CẢ</button>
         <button onclick="toggleZeroStock()" id="btnStockToggle" style="background:#424242">HIỆN TỒN > 0</button>
+        <button onclick="toggleOnlyNew()" id="btnNewToggle" style="background:var(--primary)">TẤT CẢ CT</button>
         <button onclick="copyZaloByProgram()" style="background:var(--purple)">GỬI ZALO</button>
         <button onclick="loadData()" style="background:var(--success)">MỚI</button>
     </div>
@@ -59,10 +68,11 @@
             <thead>
                 <tr>
                     <th style="width: 40px; text-align:center;">✓</th>
-                    <th style="width: 45%;">SẢN PHẨM & THÔNG SỐ</th>
+                    <th style="width: 40%;">SẢN PHẨM & THÔNG SỐ</th>
                     <th style="width: 70px; text-align:center;">TỒN</th>
-                    <th style="width: 120px;">GIÁ BÁN</th>
-                    <th style="width: 25%;">KHUYẾN MÃI</th>
+                    <th style="width: 140px;">GIÁ BÁN & ĐÁNH GIÁ</th>
+                    <th style="width: 100px; text-align:center;">NGÀY CT</th>
+                    <th style="width: 20%;">KHUYẾN MÃI</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -81,16 +91,15 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
-    let masterData = [], filteredData = [], selectedIds = new Set(), showZeroStock = false;
+    let masterData = [], filteredData = [], selectedIds = new Set(), showZeroStock = false, filterOnlyNew = false;
 
     window.onload = () => { loadData(); updateWeather(); };
 
-    // TÍNH NĂNG THỜI TIẾT CÓ ICON MƯA/NẮNG
     function getWeatherIcon(code) {
-        if (code <= 3) return "☀️"; // Nắng/Ít mây
-        if (code <= 48) return "☁️"; // Mây mù
-        if (code <= 67) return "🌧️"; // Mưa nhỏ
-        if (code <= 99) return "⛈️"; // Giông bão
+        if (code <= 3) return "☀️";
+        if (code <= 48) return "☁️";
+        if (code <= 67) return "🌧️";
+        if (code <= 99) return "⛈️";
         return "🌡️";
     }
 
@@ -125,30 +134,86 @@
         });
     }
 
+    // Hàm phân tích định dạng ngày DD/MM/YY hoặc DD/MM/YYYY thành Object Date
+    function parseDateString(dateStr) {
+        if (!dateStr || dateStr === "-") return null;
+        const parts = dateStr.split('/');
+        if (parts.length !== 3) return null;
+        let day = parseInt(parts[0]), month = parseInt(parts[1]) - 1, year = parseInt(parts[2]);
+        if (year < 100) year += 2000; // Xử lý nếu định dạng năm là YY (ví dụ: 26 -> 2026)
+        return new Date(year, month, day);
+    }
+
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:80px;">⏳ Đang phân tích biến động chương trình...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
             ]);
             const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [c[0]?.trim(), c[3]]));
             const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [c[0]?.trim(), c[2]]));
-            masterData = parseCSV(csvPrice).slice(1).map((cols, idx) => {
-                const ma = cols[0]?.trim(); const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
+            
+            const rawPriceData = parseCSV(csvPrice).slice(1);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            masterData = rawPriceData.map((cols, idx) => {
+                const ma = cols[0]?.trim(); 
+                const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (!ma || gia <= 0) return null;
+                
                 const ton = stockMap[ma] || "0";
-                return { id: idx, ma, gia, ton, ten: cols[1]?.replace(/^"|"$/g, ''), km: cols[8]?.replace(/^"|"$/g, '') || "-", isZero: ton.trim()==="0", thongSo: specMap[ma] || "Đang cập nhật..." };
+                const ngayHieuLucStr = cols[6]?.trim() || "-"; // Lấy dữ liệu ngày ở cột G (Index 6)
+                const ngayHieuLuc = parseDateString(ngayHieuLucStr);
+                
+                // Thuật toán Đánh giá trạng thái chương trình:
+                let danhGia = { code: "NONE", label: "➖ Không đổi", class: "badge-none" };
+                let isNewUpdated = false;
+
+                if (ngayHieuLuc) {
+                    const diffTime = Math.abs(today - ngayHieuLuc);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // Nếu ngày áp dụng trùng hôm nay hoặc cách tối đa 2 ngày -> Đánh dấu có Cập nhật mới
+                    if (diffDays <= 2) {
+                        isNewUpdated = true;
+                        // Đọc giá trị chiết khấu/giảm giá ở cột E (Index 4) để đánh giá tăng/giảm uư đãi
+                        const chietKhau = parseInt(cols[4]?.replace(/[^0-9]/g, '')) || 0;
+                        
+                        if (chietKhau > 500000) { 
+                            // Nếu mức chiết khấu lớn (Ví dụ mẫu từ ảnh của bạn: 880k, 990k - Gói số lượng lớn)
+                            danhGia = { code: "DOWN", label: "📉 GIẢM SÂU", class: "badge-down" };
+                        } else {
+                            danhGia = { code: "NEW", label: "🆕 CT MỚI", class: "badge-new" };
+                        }
+                    }
+                }
+
+                return { 
+                    id: idx, ma, gia, ton, 
+                    ten: cols[1]?.replace(/^"|"$/g, ''), 
+                    km: cols[8]?.replace(/^"|"$/g, '') || "-", 
+                    isZero: ton.trim() === "0", 
+                    thongSo: specMap[ma] || "Đang cập nhật...",
+                    ngayCT: ngayHieuLucStr,
+                    isNewUpdated: isNewUpdated,
+                    danhGia: danhGia
+                };
             }).filter(i => i);
+            
             filterTable();
-        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu. Vui lòng thử lại!'; }
+        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu hoặc cấu trúc bảng thay đổi. Vui lòng thử lại!'; }
     }
 
     function filterTable() {
         const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(k => k);
         filteredData = masterData.filter(i => {
-            const target = (i.ten + i.ma + i.thongSo + i.km).toLowerCase();
-            return words.every(k => target.includes(k)) && (showZeroStock ? true : !i.isZero);
+            const target = (i.ten + i.ma + i.thongSo + i.km + i.danhGia.label).toLowerCase();
+            const matchSearch = words.every(k => target.includes(k));
+            const matchStock = showZeroStock ? true : !i.isZero;
+            const matchNew = filterOnlyNew ? i.isNewUpdated : true;
+            return matchSearch && matchStock && matchNew;
         });
         renderTable();
     }
@@ -159,10 +224,15 @@
                 <td style="text-align:center"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
                 <td><b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small><span class="specs-text">${i.thongSo}</span></td>
                 <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
-                <td style="color:var(--danger); font-weight:bold;">${i.gia.toLocaleString()}đ</td>
+                <td>
+                    <span style="color:var(--danger); font-weight:bold;">${i.gia.toLocaleString()}đ</span><br>
+                    <span class="badge ${i.danhGia.class}">${i.danhGia.label}</span>
+                </td>
+                <td style="text-align:center;" class="date-text">${i.ngayCT}</td>
                 <td style="color:var(--success); font-size:11px;">${i.km !== '-' ? i.km : ''}</td>
             </tr>
         `).join('');
+        
         const btn = document.getElementById('btnSelectAll');
         const allSelInFilter = filteredData.length > 0 && filteredData.every(i => selectedIds.has(i.id));
         btn.innerText = allSelInFilter ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
@@ -174,12 +244,14 @@
 
     function handleToggleAll() {
         const allSelInFilter = filteredData.every(i => selectedIds.has(i.id));
-        if (allSelInFilter) { selectedIds.clear(); } // Reset toàn bộ nếu đã chọn hết filter
+        if (allSelInFilter) { filteredData.forEach(i => selectedIds.delete(i.id)); } 
         else { filteredData.forEach(i => selectedIds.add(i.id)); }
         renderTable();
     }
 
     function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').innerText = showZeroStock ? "ẨN TỒN 0" : "HIỆN TỒN > 0"; filterTable(); }
+    
+    function toggleOnlyNew() { filterOnlyNew = !filterOnlyNew; document.getElementById('btnNewToggle').innerText = filterOnlyNew ? "CHỈ MỚI CẬP NHẬT" : "TẤT CẢ CT"; filterTable(); }
 
     function updateFooter() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
@@ -199,9 +271,9 @@
         let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         for (const [km, items] of Object.entries(groups)) {
             txt += `\n🔥 ${km.toUpperCase()}\n`;
-            items.forEach((item, idx) => { txt += `${idx + 1}. ${item.ten} - ${item.gia.toLocaleString()}đ\n`; });
+            items.forEach((item, idx) => { txt += `${idx + 1}. ${item.ten} - ${item.gia.toLocaleString()}đ (${item.danhGia.label})\n`; });
         }
-        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá kèm biến động chương trình!"));
     }
 </script>
 </body>
