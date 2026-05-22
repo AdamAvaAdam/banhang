@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.3 - Personal Pro</title>
+    <title>Bravo Sync V15.4 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -42,6 +42,10 @@
         .sub-table { width: 100%; border-collapse: collapse; background: #fff; margin: 5px 0; border: 1px dashed var(--border); }
         .sub-table td { padding: 6px 10px; font-size: 12px; border-bottom: 1px solid #eee; }
         
+        /* Cấu hình màu sắc chữ cho giá tiền */
+        .price-normal { color: #202124; font-weight: 600; } /* Giá đại diện/bình thường màu đen */
+        .price-best { color: var(--danger); font-weight: bold; } /* Giá tốt nhất màu đỏ */
+
         .badge { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: bold; color: white; margin-left: 4px; }
         .badge-none { background: #757575; }
         .badge-new { background: var(--purple); }
@@ -81,7 +85,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15.3</div>
+<div class="header">VIỆT TUẤN SALES PRO - V15.4</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -164,7 +168,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & gộp dữ liệu combo...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & tối ưu màu sắc giá...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
@@ -191,7 +195,7 @@
                     danhGia = chietKhau > 500000 ? { label: "📉 GIẢM SÂU", class: "badge-down" } : { label: "🆕 CT MỚI", class: "badge-new" };
                 }
 
-                const chuongTrinhObj = { gia, km: kmText, ngay: ngayHL, danhGia };
+                const chuongTrinhObj = { gia, km: kmText, ngay: ngayHL, danhGia, isBest: false };
 
                 if (!groupedMap[ma]) {
                     groupedMap[ma] = {
@@ -206,7 +210,14 @@
             });
 
             masterData = Object.values(groupedMap).map(item => {
+                // Sắp xếp giá từ cao xuống thấp (Giá bán lẻ lên đầu)
                 item.allPrograms.sort((a, b) => b.gia - a.gia);
+                
+                // Thuật toán: Tìm mức giá thấp nhất trong nhóm để đánh dấu là Chương trình tốt nhất (isBest)
+                let minPrice = Infinity;
+                item.allPrograms.forEach(p => { if(p.gia < minPrice) minPrice = p.gia; });
+                item.allPrograms.forEach(p => { if(p.gia === minPrice) p.isBest = true; });
+
                 const defaultProg = item.allPrograms.find(p => p.km.toLowerCase().includes("lẻ")) || item.allPrograms[0];
                 item.giaDaiDien = defaultProg.gia;
                 item.kmDaiDien = defaultProg.km;
@@ -244,7 +255,7 @@
                     </td>
                     <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
                     <td>
-                        <span style="color:var(--danger); font-weight:bold;">${i.giaDaiDien.toLocaleString()}đ</span><br>
+                        <span class="price-normal">${i.giaDaiDien.toLocaleString()}đ</span><br>
                         <span class="badge ${i.danhGiaDaiDien.class}">${i.danhGiaDaiDien.label}</span>
                     </td>
                     <td style="color:var(--success); font-size:11px;">${i.kmDaiDien !== '-' ? i.kmDaiDien : ''}</td>
@@ -259,7 +270,7 @@
                                 <tbody>
                                     ${i.allPrograms.map(p => `
                                         <tr>
-                                            <td style="width:130px; font-weight:bold; color:var(--danger);">${p.gia.toLocaleString()}đ</td>
+                                            <td style="width:130px;" class="${p.isBest ? 'price-best' : 'price-normal'}">${p.gia.toLocaleString()}đ</td>
                                             <td style="color:#333;">${p.km}</td>
                                             <td style="width:80px; color:#666; text-align:center;">${p.ngay}</td>
                                             <td style="width:100px;"><span class="badge ${p.danhGia.class}">${p.danhGia.label}</span></td>
@@ -309,25 +320,19 @@
         document.getElementById('selCount').innerText = selectedIds.size;
     }
 
-    /* HÀM COPY GỬI ZALO ĐÃ ĐƯỢC TỐI ƯU CƠ CẤU COMBO TRỘN MÃ:
-      Tự động bóc tách và gom nhóm các sản phẩm được chọn chạy chung một Gói/Combo chương trình.
-    */
     function copyZaloByProgram() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
         if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
         
-        const comboGroups = {}; // Gom nhóm các mã chạy chung chương trình/Combo trộn mã
-        const leItems = [];     // Chứa các sản phẩm bán lẻ thông thường
+        const comboGroups = {};
+        const leItems = [];
         
         selItems.forEach(item => {
-            // Kiểm tra xem trong danh sách chương trình, có chương trình dạng Gói/Combo thương mại không
             const hasComboProg = item.allPrograms.filter(p => p.km.toUpperCase().includes("GÓI") || p.km.toUpperCase().includes("COMBO"));
-            
             if (hasComboProg.length > 0) {
                 hasComboProg.forEach(p => {
                     const groupName = p.km.toUpperCase().trim();
                     if (!comboGroups[groupName]) comboGroups[groupName] = [];
-                    // Tránh ghi đè trùng lặp model trong cùng một nhóm chương trình
                     if (!comboGroups[groupName].some(exist => exist.ma === item.ma)) {
                         comboGroups[groupName].push({ ten: item.ten, ma: item.ma, gia: p.gia, label: p.danhGia.label });
                     }
@@ -339,7 +344,6 @@
 
         let txt = "📣 BÁO GIÁ VIỆT TUẤN (CẬP NHẬT CHƯƠNG TRÌNH)\n";
         
-        // Xuất văn bản các chương trình GÓI TRỘN MÃ (Mix-and-Match) trước
         for (const [comboName, items] of Object.entries(comboGroups)) {
             txt += `\n🔥 CHƯƠNG TRÌNH: ${comboName}\n`;
             txt += `⚠️ (Áp dụng khi lấy đủ cơ cấu số lượng trộn gói)\n`;
@@ -348,7 +352,6 @@
             });
         }
 
-        // Xuất các mã sản phẩm chạy giá độc lập/bán lẻ sau
         if (leItems.length > 0) {
             txt += `\n📌 CÁC MÃ HÀNG BÁN LẺ / CHƯƠNG TRÌNH RIÊNG:\n`;
             leItems.forEach((item, idx) => {
