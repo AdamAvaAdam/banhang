@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.6 - Personal Pro</title>
+    <title>Bravo Sync V15.7 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -52,12 +52,10 @@
 
         .footer-pad { position: fixed; bottom: 0; left: 0; right: 0; background: #202124; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 1100; }
 
-        /* ================= CSS RESPONSIVE TỐI ƯU TUYỆT ĐỐI CHO MOBILE ================= */
         @media screen and (max-width: 768px) {
             .table-res { border: none; background: transparent; }
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
-            
             tbody tr[onclick^="toggleSelect"] {
                 background: white; margin-bottom: 10px; border-radius: 8px;
                 border: 1px solid var(--border); padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -65,7 +63,6 @@
             }
             tbody tr.selected-row { border-color: var(--primary); background: #f4f8fe !important; }
             td { border: none; padding: 4px 0; position: relative; width: 100% !important; text-align: left !important; }
-            
             td:nth-child(1) { width: auto !important; display: inline-block; margin-right: 8px; vertical-align: middle; }
             td:nth-child(2) { display: inline; vertical-align: middle; }
             td:nth-child(3) { display: block; font-size: 12px; margin-top: 6px; border-top: 1px dashed #eee; padding-top: 6px; }
@@ -73,7 +70,6 @@
             td:nth-child(4) { display: block; font-size: 14px; margin-top: 2px; }
             td:nth-child(4)::before { content: "Giá đại diện: "; color: #666; font-size: 12px; font-weight: normal; }
             td:nth-child(5) { display: none; }
-            
             .sub-row.open { display: block; background: #fdfdfd; padding: 5px; border: 1px dashed var(--primary); border-radius: 6px; margin-top: -5px; margin-bottom: 10px; }
             .sub-table { border: none; }
             .sub-table tr { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px solid #eee; }
@@ -84,7 +80,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15.6</div>
+<div class="header">VIỆT TUẤN SALES PRO - V15.7</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -305,7 +301,7 @@
     }
 
     function handleToggleAll() {
-        const allSelInFilter = filteredData.every(i => selectedIds.has(id));
+        const allSelInFilter = filteredData.every(i => selectedIds.has(i.id));
         if (allSelInFilter) { filteredData.forEach(i => selectedIds.delete(i.id)); }
         else { filteredData.forEach(i => selectedIds.add(i.id)); }
         renderTable();
@@ -317,32 +313,36 @@
         document.getElementById('selCount').innerText = selectedIds.size;
     }
 
-    /* HÀM XUẤT ZALO ĐÃ ĐƯỢC BỎ HOÀN TOÀN CHỮ [KHÔNG ĐỔI/BIẾN ĐỘNG] VÀ ẨN TUYỆT ĐỐI SỐ LƯỢNG HÀNG TỒN */
+    /* ĐÃ SỬA LỖI PHÂN LOẠI COMBO/BÁN LẺ: Phân rã lọc theo cấp dòng chương trình, ẩn tồn kho tuyệt đối */
     function copyZaloByProgram() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
         if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
         
         const comboGroups = {};
-        const leItems = [];
+        const leItemsMap = {}; // Dùng object map để gom các dòng lẻ theo Model máy
         
         selItems.forEach(item => {
-            const hasComboProg = item.allPrograms.filter(p => p.km.toUpperCase().includes("GÓI") || p.km.toUpperCase().includes("COMBO"));
-            if (hasComboProg.length > 0) {
-                hasComboProg.forEach(p => {
-                    const groupName = p.km.toUpperCase().trim();
-                    if (!comboGroups[groupName]) comboGroups[groupName] = [];
-                    if (!comboGroups[groupName].some(exist => exist.ma === item.ma)) {
-                        comboGroups[groupName].push({ ten: item.ten, ma: item.ma, gia: p.gia });
+            item.allPrograms.forEach(p => {
+                const kmUpper = p.km.toUpperCase().trim();
+                const isCombo = kmUpper.includes("GÓI") || kmUpper.includes("COMBO") || kmUpper.includes("CT ");
+                
+                if (isCombo) {
+                    // Nếu là dòng giá thuộc dạng Gói/Combo -> Gom cụm vào nhóm Combo thương mại
+                    if (!comboGroups[kmUpper]) comboGroups[kmUpper] = [];
+                    comboGroups[kmUpper].push({ ten: item.ten, ma: item.ma, gia: p.gia });
+                } else {
+                    // Nếu là dòng giá bán lẻ thông thường -> Gom riêng
+                    if (!leItemsMap[item.ma]) {
+                        leItemsMap[item.ma] = { ten: item.ten, ma: item.ma, progs: [] };
                     }
-                });
-            } else {
-                leItems.push(item);
-            }
+                    leItemsMap[item.ma].progs.push(p);
+                }
+            });
         });
 
         let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         
-        // 1. Xuất văn bản theo cơ cấu Combo trộn mã công khai giá gói
+        // 1. Xuất danh sách theo Chương trình Gói (Không bị nuốt dòng, không có nhãn trạng thái)
         for (const [comboName, items] of Object.entries(comboGroups)) {
             txt += `\n🔥 CHƯƠNG TRÌNH: ${comboName}\n`;
             txt += `⚠️ (Áp dụng khi lấy đủ cơ cấu số lượng trộn gói)\n`;
@@ -351,18 +351,19 @@
             });
         }
 
-        // 2. Xuất văn bản các mã lẻ độc lập (Đã ẩn hoàn toàn phần hiển thị TỒN KHO)
+        // 2. Xuất danh sách sản phẩm lẻ/giá cơ sở (ẨN TUYỆT ĐỐI HÀNG TỒN KHO)
+        const leItems = Object.values(leItemsMap);
         if (leItems.length > 0) {
             txt += `\n📌 CÁC MÃ HÀNG BÁN LẺ / CHƯƠNG TRÌNH RIÊNG:\n`;
             leItems.forEach((item, idx) => {
                 txt += `\n👉 ${idx + 1}. ${item.ten} (${item.ma})\n`;
-                item.allPrograms.forEach(p => {
+                item.progs.forEach(p => {
                     txt += `   • Giá: ${p.gia.toLocaleString()}đ -> CT: ${p.km}\n`;
                 });
             });
         }
 
-        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá sạch (Đã ẩn Tồn kho & Nhãn biến động)!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã xử lý tách lọc chính xác giá bán lẻ và copy thành công!"));
     }
 </script>
 </body>
