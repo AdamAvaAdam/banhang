@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.9 - Personal Pro</title>
+    <title>Bravo Sync V16.0 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -41,6 +41,7 @@
         .sub-row.open { display: table-row; }
         .sub-table { width: 100%; border-collapse: collapse; background: #fff; margin: 5px 0; border: 1px dashed var(--border); }
         .sub-table td { padding: 6px 10px; font-size: 12px; border-bottom: 1px solid #eee; }
+        .sub-row-selected { background: #e8f0fe !important; }
         
         .price-normal { color: #202124; font-weight: 600; }
         .price-best { color: var(--danger); font-weight: bold; }
@@ -80,7 +81,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15.9</div>
+<div class="header">VIỆT TUẤN SALES PRO - V16.0 (TÍCH CHỌN CHƯƠNG TRÌNH CHI TIẾT)</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -109,8 +110,8 @@
 </div>
 
 <div class="footer-pad">
-    <div>Đã chọn: <b id="selCount">0</b> mã hàng</div>
-    <button onclick="selectedIds.clear(); filterTable();" style="background:#d93025; font-size:11px;">RESET DANH SÁCH CHỌN</button>
+    <div>Đã chọn: <b id="selCount">0</b> chương trình giá cụ thể</div>
+    <button onclick="resetAllSelection(); filterTable();" style="background:#d93025; font-size:11px;">RESET DANH SÁCH CHỌN</button>
 </div>
 
 <script>
@@ -118,7 +119,7 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
-    let masterData = [], filteredData = [], selectedIds = new Set(), showZeroStock = false, openSubRows = new Set();
+    let masterData = [], filteredData = [], selectedSubProgs = new Set(), openSubRows = new Set();
 
     window.onload = () => { loadData(); updateWeather(); };
 
@@ -163,7 +164,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & tối ưu dữ liệu báo giá...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & gộp dữ liệu combo...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
@@ -174,6 +175,8 @@
             const rawPriceRows = parseCSV(csvPrice).slice(1);
             const groupedMap = {};
             const todayStr = new Date().toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'});
+
+            let globalProgId = 0; // Định danh ID duy nhất cho từng cấp giá riêng biệt
 
             rawPriceRows.forEach((cols, idx) => {
                 const ma = cols[0]?.trim(); 
@@ -190,7 +193,8 @@
                     danhGia = chietKhau > 500000 ? { label: "📉 GIẢM SÂU", class: "badge-down" } : { label: "🆕 CT MỚI", class: "badge-new" };
                 }
 
-                const chuongTrinhObj = { gia, km: kmText, ngay: ngayHL, danhGia, isBest: false };
+                globalProgId++;
+                const chuongTrinhObj = { subProgId: globalProgId, gia, km: kmText, ngay: ngayHL, danhGia, isBest: false };
 
                 if (!groupedMap[ma]) {
                     groupedMap[ma] = {
@@ -212,6 +216,7 @@
                 item.allPrograms.forEach(p => { if(p.gia === minPrice) p.isBest = true; });
 
                 const defaultProg = item.allPrograms.find(p => p.km.toLowerCase().includes("lẻ")) || item.allPrograms[0];
+                item.defaultSubProgId = defaultProg.subProgId; // Lưu ID của giá lẻ mặc định
                 item.giaDaiDien = defaultProg.gia;
                 item.kmDaiDien = defaultProg.km;
                 item.danhGiaDaiDien = defaultProg.danhGia;
@@ -239,12 +244,17 @@
             const hasSub = i.allPrograms.length > 1;
             const isSubOpen = openSubRows.has(i.id);
             
+            // Dòng chính được coi là "Selected" nếu có ít nhất 1 chương trình phụ bên trong nó được chọn
+            const isRowSelected = i.allPrograms.some(p => selectedSubProgs.has(p.subProgId));
+            
             html += `
-                <tr class="${selectedIds.has(i.id) ? 'selected-row' : ''}" onclick="toggleSelect(event, ${i.id})">
-                    <td style="text-align:center" onclick="event.stopPropagation(); toggleCheckbox(${i.id});"><input type="checkbox" ${selectedIds.has(i.id) ? 'checked' : ''}></td>
+                <tr class="${isRowSelected ? 'selected-row' : ''}" onclick="toggleMainRow(event, ${i.id})">
+                    <td style="text-align:center" onclick="event.stopPropagation(); handleCheckboxMain(${i.id});">
+                        <input type="checkbox" ${isRowSelected ? 'checked' : ''}>
+                    </td>
                     <td>
                         <b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small><span class="specs-text">${i.thongSo}</span>
-                        ${hasSub ? `<div class="btn-expand" onclick="event.stopPropagation(); toggleSubRow(${i.id})">${isSubOpen ? '🔼 ẨN CHƯƠNG TRÌNH PHỤ' : `🔽 XEM THÊM ${i.allPrograms.length - 1} CẤP GIÁ SỈ`}</div>` : ''}
+                        ${hasSub ? `<div class="btn-expand" onclick="event.stopPropagation(); toggleSubRow(${i.id})">${isSubOpen ? '🔼 ẨN CHƯƠNG TRÌNH PHỤ' : `🔽 XEM & CHỌN CẤP GIÁ CHI TIẾT (${i.allPrograms.length})`}</div>` : ''}
                     </td>
                     <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
                     <td>
@@ -261,14 +271,20 @@
                         <td colspan="5" style="padding: 0 10px 10px 40px; cursor: default;" onclick="event.stopPropagation();">
                             <table class="sub-table">
                                 <tbody>
-                                    ${i.allPrograms.map(p => `
-                                        <tr>
-                                            <td style="width:130px;" class="${p.isBest ? 'price-best' : 'price-normal'}">${p.gia.toLocaleString()}đ</td>
-                                            <td style="color:#333;">${p.km}</td>
-                                            <td style="width:80px; color:#666; text-align:center;">${p.ngay}</td>
-                                            <td style="width:100px;"><span class="badge ${p.danhGia.class}">${p.danhGia.label}</span></td>
-                                        </tr>
-                                    `).join('')}
+                                    ${i.allPrograms.map(p => {
+                                        const isChecked = selectedSubProgs.has(p.subProgId);
+                                        return `
+                                            <tr class="${isChecked ? 'sub-row-selected' : ''}" style="cursor:pointer;" onclick="toggleSubProgSelection(${p.subProgId})">
+                                                <td style="width:30px; text-align:center;">
+                                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSubProgSelection(${p.subProgId})">
+                                                </td>
+                                                <td style="width:130px;" class="${p.isBest ? 'price-best' : 'price-normal'}">${p.gia.toLocaleString()}đ</td>
+                                                <td style="color:#333;">${p.km}</td>
+                                                <td style="width:80px; color:#666; text-align:center;">${p.ngay}</td>
+                                                <td style="width:100px;"><span class="badge ${p.danhGia.class}">${p.danhGia.label}</span></td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
                                 </tbody>
                             </table>
                         </td>
@@ -279,19 +295,43 @@
 
         tbody.innerHTML = html;
         const btn = document.getElementById('btnSelectAll');
-        const allSelInFilter = filteredData.length > 0 && filteredData.every(i => selectedIds.has(i.id));
+        
+        // Kiểm tra xem tất cả các chương trình đại diện của filter hiện tại đã được chọn hết chưa
+        const allSelInFilter = filteredData.length > 0 && filteredData.every(i => selectedSubProgs.has(i.defaultSubProgId));
         btn.innerText = allSelInFilter ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
         btn.classList.toggle('active', allSelInFilter);
         updateFooter();
     }
 
-    function toggleSelect(event, id) {
+    function toggleMainRow(event, id) {
         if (event.target.tagName === 'INPUT' || event.target.classList.contains('btn-expand')) return;
-        toggleCheckbox(id);
+        handleCheckboxMain(id);
     }
 
-    function toggleCheckbox(id) {
-        if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+    // Khi tích chọn dòng chính: Mặc định chọn/bỏ chọn dòng Giá bán lẻ đại diện của nó
+    function handleCheckboxMain(id) {
+        const item = masterData.find(i => i.id === id);
+        if (!item) return;
+        
+        const hasAnySelected = item.allPrograms.some(p => selectedSubProgs.has(p.subProgId));
+        
+        if (hasAnySelected) {
+            // Nếu có bất kỳ dòng phụ nào đang chọn -> Xóa hết toàn bộ cấp giá của mã này
+            item.allPrograms.forEach(p => selectedSubProgs.delete(p.subProgId));
+        } else {
+            // Nếu chưa chọn gì -> Mặc định kích hoạt dòng giá bán lẻ đại diện
+            selectedSubProgs.add(item.defaultSubProgId);
+        }
+        renderTable();
+    }
+
+    // Tích chọn trực tiếp dòng chương trình phụ chi tiết cụ thể
+    function toggleSubProgSelection(subProgId) {
+        if (selectedSubProgs.has(subProgId)) {
+            selectedSubProgs.delete(subProgId);
+        } else {
+            selectedSubProgs.add(subProgId);
+        }
         renderTable();
     }
 
@@ -301,39 +341,50 @@
     }
 
     function handleToggleAll() {
-        const allSelInFilter = filteredData.every(i => selectedIds.has(i.id));
-        if (allSelInFilter) { filteredData.forEach(i => selectedIds.delete(i.id)); }
-        else { filteredData.forEach(i => selectedIds.add(i.id)); }
+        const allSelInFilter = filteredData.every(i => selectedSubProgs.has(i.defaultSubProgId));
+        filteredData.forEach(i => {
+            if (allSelInFilter) {
+                // Xóa sạch toàn bộ chương trình phụ thuộc mã này nếu nhấn bỏ chọn tất cả
+                i.allPrograms.forEach(p => selectedSubProgs.delete(p.subProgId));
+            } else {
+                // Thêm dòng giá đại diện mặc định
+                selectedSubProgs.add(i.defaultSubProgId);
+            }
+        });
         renderTable();
     }
 
     function toggleZeroStock() { showZeroStock = !showZeroStock; document.getElementById('btnStockToggle').innerText = showZeroStock ? "ẨN TỒN 0" : "HIỆN TỒN > 0"; filterTable(); }
 
-    function updateFooter() {
-        document.getElementById('selCount').innerText = selectedIds.size;
+    function resetAllSelection() {
+        selectedSubProgs.clear();
     }
 
-    /* ĐÃ BỎ: Dòng cảnh báo điều kiện cơ cấu gói trộn để văn bản Zalo đạt độ gọn tối đa */
+    function updateFooter() {
+        document.getElementById('selCount').innerText = selectedSubProgs.size;
+    }
+
+    /* CHỨC NĂNG GỬI ZALO ĐÃ ĐƯỢC LẬP TRÌNH LẠI: Chỉ bốc đúng những dòng chương trình được tích chọn */
     function copyZaloByProgram() {
-        const selItems = masterData.filter(i => selectedIds.has(i.id));
-        if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
+        if (selectedSubProgs.size === 0) return alert("Vui lòng tích chọn ít nhất một chương trình giá!");
         
         const comboGroups = {};
         const leItemsMap = {};
         
-        selItems.forEach(item => {
+        masterData.forEach(item => {
+            // Lọc ra các chương trình phụ của mã này nằm trong danh sách được tích chọn
+            const activeProgs = item.allPrograms.filter(p => selectedSubProgs.has(p.subProgId));
+            if (activeProgs.length === 0) return;
+
             const tenSạch = item.ten.replace(/\s*\([^)]*?\)\s*$/, '').trim();
 
-            item.allPrograms.forEach(p => {
+            activeProgs.forEach(p => {
                 const kmUpper = p.km.toUpperCase().trim();
                 const isCombo = kmUpper.includes("GÓI") || kmUpper.includes("COMBO") || kmUpper.includes("CT ");
                 
                 if (isCombo) {
                     if (!comboGroups[kmUpper]) comboGroups[kmUpper] = [];
-                    if (!comboGroups[kmUpper].some(exist => exist.ma === item.ma)) {
-                        comboGroups[comboGroups] = [];
-                        comboGroups[kmUpper].push({ ten: tenSạch, ma: item.ma, gia: p.gia });
-                    }
+                    comboGroups[kmUpper].push({ ten: tenSạch, ma: item.ma, gia: p.gia });
                 } else {
                     if (!leItemsMap[item.ma]) {
                         leItemsMap[item.ma] = { ten: tenSạch, ma: item.ma, progs: [] };
@@ -345,7 +396,7 @@
 
         let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         
-        // 1. Xuất danh sách theo Chương trình Gói (Đã xóa bỏ dòng lưu ý cơ cấu trộn gói)
+        // 1. Xuất danh sách nhóm Combo (Chỉ xuất dòng được tích chọn)
         for (const [comboName, items] of Object.entries(comboGroups)) {
             txt += `\n🔥 CHƯƠNG TRÌNH: ${comboName}\n`;
             items.forEach((it, idx) => {
@@ -353,7 +404,7 @@
             });
         }
 
-        // 2. Xuất danh sách sản phẩm lẻ/giá cơ sở
+        // 2. Xuất danh sách nhóm Bán lẻ/Chính sách riêng (Chỉ xuất dòng được tích chọn)
         const leItems = Object.values(leItemsMap);
         if (leItems.length > 0) {
             txt += `\n📌 CÁC MÃ HÀNG BÁN LẺ / CHƯƠNG TRÌNH RIÊNG:\n`;
@@ -365,7 +416,7 @@
             });
         }
 
-        navigator.clipboard.writeText(txt).then(() => alert("Đã lược bỏ dòng lưu ý và copy thành công!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã copy báo giá chính xác theo các chương trình được chọn!"));
     }
 </script>
 </body>
