@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V16.0 - Personal Pro</title>
+    <title>Bravo Sync V16.1 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -81,7 +81,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V16.0 (TÍCH CHỌN CHƯƠNG TRÌNH CHI TIẾT)</div>
+<div class="header">VIỆT TUẤN SALES PRO - V16.1</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -119,7 +119,7 @@
     const URL_PRICE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1327420648&single=true&output=csv";
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
-    let masterData = [], filteredData = [], selectedSubProgs = new Set(), openSubRows = new Set();
+    let masterData = [], filteredData = [], selectedSubProgs = new Set(), openSubRows = new Set(), showZeroStock = false;
 
     window.onload = () => { loadData(); updateWeather(); };
 
@@ -164,7 +164,7 @@
 
     async function loadData() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & gộp dữ liệu combo...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:80px;">⏳ Đang đồng bộ hệ thống & dữ liệu chương trình sỉ lẻ...</td></tr>';
         try {
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
@@ -176,7 +176,7 @@
             const groupedMap = {};
             const todayStr = new Date().toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'});
 
-            let globalProgId = 0; // Định danh ID duy nhất cho từng cấp giá riêng biệt
+            let globalProgId = 0;
 
             rawPriceRows.forEach((cols, idx) => {
                 const ma = cols[0]?.trim(); 
@@ -216,7 +216,7 @@
                 item.allPrograms.forEach(p => { if(p.gia === minPrice) p.isBest = true; });
 
                 const defaultProg = item.allPrograms.find(p => p.km.toLowerCase().includes("lẻ")) || item.allPrograms[0];
-                item.defaultSubProgId = defaultProg.subProgId; // Lưu ID của giá lẻ mặc định
+                item.defaultSubProgId = defaultProg.subProgId;
                 item.giaDaiDien = defaultProg.gia;
                 item.kmDaiDien = defaultProg.km;
                 item.danhGiaDaiDien = defaultProg.danhGia;
@@ -224,7 +224,7 @@
             });
 
             filterTable();
-        } catch (e) { tbody.innerHTML = '❌ Lỗi tải dữ liệu. Vui lòng thử lại!'; }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:red;font-weight:bold;">❌ Lỗi tải dữ liệu. Vui lòng thử lại!</td></tr>'; }
     }
 
     function filterTable() {
@@ -238,13 +238,12 @@
 
     function renderTable() {
         const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
         let html = "";
         
         filteredData.forEach(i => {
             const hasSub = i.allPrograms.length > 1;
             const isSubOpen = openSubRows.has(i.id);
-            
-            // Dòng chính được coi là "Selected" nếu có ít nhất 1 chương trình phụ bên trong nó được chọn
             const isRowSelected = i.allPrograms.some(p => selectedSubProgs.has(p.subProgId));
             
             html += `
@@ -295,8 +294,6 @@
 
         tbody.innerHTML = html;
         const btn = document.getElementById('btnSelectAll');
-        
-        // Kiểm tra xem tất cả các chương trình đại diện của filter hiện tại đã được chọn hết chưa
         const allSelInFilter = filteredData.length > 0 && filteredData.every(i => selectedSubProgs.has(i.defaultSubProgId));
         btn.innerText = allSelInFilter ? "BỎ CHỌN TẤT CẢ" : "CHỌN TẤT CẢ";
         btn.classList.toggle('active', allSelInFilter);
@@ -308,24 +305,19 @@
         handleCheckboxMain(id);
     }
 
-    // Khi tích chọn dòng chính: Mặc định chọn/bỏ chọn dòng Giá bán lẻ đại diện của nó
     function handleCheckboxMain(id) {
         const item = masterData.find(i => i.id === id);
         if (!item) return;
         
         const hasAnySelected = item.allPrograms.some(p => selectedSubProgs.has(p.subProgId));
-        
         if (hasAnySelected) {
-            // Nếu có bất kỳ dòng phụ nào đang chọn -> Xóa hết toàn bộ cấp giá của mã này
             item.allPrograms.forEach(p => selectedSubProgs.delete(p.subProgId));
         } else {
-            // Nếu chưa chọn gì -> Mặc định kích hoạt dòng giá bán lẻ đại diện
             selectedSubProgs.add(item.defaultSubProgId);
         }
         renderTable();
     }
 
-    // Tích chọn trực tiếp dòng chương trình phụ chi tiết cụ thể
     function toggleSubProgSelection(subProgId) {
         if (selectedSubProgs.has(subProgId)) {
             selectedSubProgs.delete(subProgId);
@@ -344,10 +336,8 @@
         const allSelInFilter = filteredData.every(i => selectedSubProgs.has(i.defaultSubProgId));
         filteredData.forEach(i => {
             if (allSelInFilter) {
-                // Xóa sạch toàn bộ chương trình phụ thuộc mã này nếu nhấn bỏ chọn tất cả
                 i.allPrograms.forEach(p => selectedSubProgs.delete(p.subProgId));
             } else {
-                // Thêm dòng giá đại diện mặc định
                 selectedSubProgs.add(i.defaultSubProgId);
             }
         });
@@ -364,7 +354,7 @@
         document.getElementById('selCount').innerText = selectedSubProgs.size;
     }
 
-    /* CHỨC NĂNG GỬI ZALO ĐÃ ĐƯỢC LẬP TRÌNH LẠI: Chỉ bốc đúng những dòng chương trình được tích chọn */
+    /* ĐÃ FIX TRIỆT ĐỂ LỖI CRASH: Gom và bốc chính xác từng dòng chương trình lẻ/gói được sales chọn */
     function copyZaloByProgram() {
         if (selectedSubProgs.size === 0) return alert("Vui lòng tích chọn ít nhất một chương trình giá!");
         
@@ -372,10 +362,10 @@
         const leItemsMap = {};
         
         masterData.forEach(item => {
-            // Lọc ra các chương trình phụ của mã này nằm trong danh sách được tích chọn
             const activeProgs = item.allPrograms.filter(p => selectedSubProgs.has(p.subProgId));
             if (activeProgs.length === 0) return;
 
+            // Dùng Regex làm sạch tên máy, bóc sạch các chuỗi ngoặc đơn (MK), (GBK)... ở cuối tên
             const tenSạch = item.ten.replace(/\s*\([^)]*?\)\s*$/, '').trim();
 
             activeProgs.forEach(p => {
@@ -396,7 +386,7 @@
 
         let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         
-        // 1. Xuất danh sách nhóm Combo (Chỉ xuất dòng được tích chọn)
+        // 1. Nhóm các dòng giá thuộc chương trình Gói sỉ
         for (const [comboName, items] of Object.entries(comboGroups)) {
             txt += `\n🔥 CHƯƠNG TRÌNH: ${comboName}\n`;
             items.forEach((it, idx) => {
@@ -404,7 +394,7 @@
             });
         }
 
-        // 2. Xuất danh sách nhóm Bán lẻ/Chính sách riêng (Chỉ xuất dòng được tích chọn)
+        // 2. Nhóm các dòng giá bán lẻ (Ẩn hoàn toàn hàng tồn kho bảo mật)
         const leItems = Object.values(leItemsMap);
         if (leItems.length > 0) {
             txt += `\n📌 CÁC MÃ HÀNG BÁN LẺ / CHƯƠNG TRÌNH RIÊNG:\n`;
