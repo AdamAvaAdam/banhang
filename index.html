@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V15.8 - Personal Pro</title>
+    <title>Bravo Sync V15.9 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -80,7 +80,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V15.8</div>
+<div class="header">VIỆT TUẤN SALES PRO - V15.9</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -313,7 +313,7 @@
         document.getElementById('selCount').innerText = selectedIds.size;
     }
 
-    /* ĐÃ NÂNG CẤP: Loại bỏ hoàn toàn mã hàng nằm trong dấu ngoặc đơn ở cuối tên khi gửi Zalo */
+    /* ĐÃ BỎ: Dòng cảnh báo điều kiện cơ cấu gói trộn để văn bản Zalo đạt độ gọn tối đa */
     function copyZaloByProgram() {
         const selItems = masterData.filter(i => selectedIds.has(i.id));
         if (selItems.length === 0) return alert("Vui lòng chọn sản phẩm!");
@@ -322,7 +322,6 @@
         const leItemsMap = {};
         
         selItems.forEach(item => {
-            // Loại bỏ dấu cách thừa và chuỗi ngoặc đơn chứa mã hàng (ví dụ: (HITLWB640GBK)) ở cuối tên gốc
             const tenSạch = item.ten.replace(/\s*\([^)]*?\)\s*$/, '').trim();
 
             item.allPrograms.forEach(p => {
@@ -332,6 +331,7 @@
                 if (isCombo) {
                     if (!comboGroups[kmUpper]) comboGroups[kmUpper] = [];
                     if (!comboGroups[kmUpper].some(exist => exist.ma === item.ma)) {
+                        comboGroups[comboGroups] = [];
                         comboGroups[kmUpper].push({ ten: tenSạch, ma: item.ma, gia: p.gia });
                     }
                 } else {
@@ -345,16 +345,15 @@
 
         let txt = "📣 BÁO GIÁ VIỆT TUẤN\n";
         
-        // 1. Xuất danh sách theo Chương trình Gói
+        // 1. Xuất danh sách theo Chương trình Gói (Đã xóa bỏ dòng lưu ý cơ cấu trộn gói)
         for (const [comboName, items] of Object.entries(comboGroups)) {
             txt += `\n🔥 CHƯƠNG TRÌNH: ${comboName}\n`;
-            txt += `⚠️ (Áp dụng khi lấy đủ cơ cấu số lượng trộn gói)\n`;
             items.forEach((it, idx) => {
                 txt += `   ${idx + 1}. ${it.ten} -> Giá gói: ${it.gia.toLocaleString()}đ\n`;
             });
         }
 
-        // 2. Xuất danh sách sản phẩm lẻ/giá cơ sở (Đã giấu mã hàng trong ngoặc và giấu tồn kho)
+        // 2. Xuất danh sách sản phẩm lẻ/giá cơ sở
         const leItems = Object.values(leItemsMap);
         if (leItems.length > 0) {
             txt += `\n📌 CÁC MÃ HÀNG BÁN LẺ / CHƯƠNG TRÌNH RIÊNG:\n`;
@@ -366,7 +365,7 @@
             });
         }
 
-        navigator.clipboard.writeText(txt).then(() => alert("Đã tối ưu làm sạch tên sản phẩm và copy thành công!"));
+        navigator.clipboard.writeText(txt).then(() => alert("Đã lược bỏ dòng lưu ý và copy thành công!"));
     }
 </script>
 </body>
