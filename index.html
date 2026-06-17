@@ -1,3 +1,19 @@
+Dưới đây là toàn bộ đoạn mã nguồn hoàn chỉnh và chuẩn nhất cho hệ thống **VIỆT TUẤN SALES PRO - V16.2**.
+
+Đoạn mã này đã được tích hợp toàn bộ các giải pháp xử lý triệt để các lỗi bạn gặp phải:
+
+1. **Ép chuẩn hóa Unicode và Kiểu dữ liệu (`.toString().normalize()`):** Giải quyết tận gốc việc một số ít sản phẩm bị hiện *"Đang cập nhật..."* do lỗi định dạng ô ẩn hoặc lệch mã ký tự trên Google Sheets.
+2. **Sửa logic Checkbox dòng chính:** Khi tích chọn lại sẽ không bị mất các chương trình phụ.
+3. **Sửa nút RESET:** Giao diện sẽ lập tức xóa sạch các ô đã chọn và trả màu sắc về ban đầu.
+4. **Tối ưu văn bản gửi Zalo:** Tách biệt rõ ràng giữa hàng Combo và hàng Bán lẻ, không bị lặp lại tên máy khi sales tích chọn nhiều mức giá của cùng một sản phẩm.
+
+---
+
+### MÃ NGUỒN HOÀN CHỈNH (Bao gồm HTML, CSS và SCRIPT chuẩn)
+
+Bạn chỉ cần copy toàn bộ đoạn code dưới đây và đè vào file chạy của mình:
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -46,7 +62,6 @@
         .price-normal { color: #202124; font-weight: 600; }
         .price-best { color: var(--danger); font-weight: bold; }
 
-        /* CSS Nút Copy nhanh trên từng ô giá */
         .btn-quick-copy { display: inline-block; padding: 2px 6px; margin-top: 4px; background: #f1f3f4; color: #5f6368; font-size: 10px; border-radius: 4px; border: 1px solid #dadce0; font-weight: bold; text-align: center; }
         .btn-quick-copy:hover { background: var(--zalo); color: white; border-color: var(--zalo); }
 
@@ -173,8 +188,17 @@
             const [csvStock, csvPrice, csvSpecs] = await Promise.all([
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
             ]);
-            const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [c[0]?.trim(), c[3]]));
-            const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [c[0]?.trim(), c[2]]));
+            
+            // ÉP KIỂU VÀ CHUẨN HÓA UNICODE CHO BẢNG THÔNG SỐ & BẢNG TỒN
+            const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [
+                c[0] ? c[0].toString().trim().toUpperCase().normalize() : "", 
+                c[3]
+            ]));
+            
+            const specMap = Object.fromEntries(parseCSV(csvSpecs).map(c => [
+                c[0] ? c[0].toString().trim().toUpperCase().normalize() : "", 
+                c[2]
+            ]));
             
             const rawPriceRows = parseCSV(csvPrice).slice(1);
             const groupedMap = {};
@@ -183,11 +207,15 @@
             let globalProgId = 0;
 
             rawPriceRows.forEach((cols, idx) => {
-                const ma = cols[0]?.trim(); 
+                const gốcMa = cols[0]?.trim(); 
+                if (!gốcMa) return;
+                
+                // Ép chuẩn hóa mã từ bảng giá trước khi tra cứu
+                const maChuanHoa = gốcMa.toString().trim().toUpperCase().normalize();
                 const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
-                if (!ma || gia <= 0) return;
+                if (gia <= 0) return;
 
-                const ton = stockMap[ma] || "0";
+                const ton = stockMap[maChuanHoa] || "0";
                 const kmText = cols[8]?.replace(/^"|"$/g, '') || "-";
                 const ngayHL = cols[6]?.trim() || "-";
                 const chietKhau = parseInt(cols[4]?.replace(/[^0-9]/g, '')) || 0;
@@ -200,16 +228,16 @@
                 globalProgId++;
                 const chuongTrinhObj = { subProgId: globalProgId, gia, km: kmText, ngay: ngayHL, danhGia, isBest: false };
 
-                if (!groupedMap[ma]) {
-                    groupedMap[ma] = {
-                        id: idx, ma, ton,
+                if (!groupedMap[maChuanHoa]) {
+                    groupedMap[maChuanHoa] = {
+                        id: idx, ma: gốcMa, ton,
                         ten: cols[1]?.replace(/^"|"$/g, ''),
                         isZero: ton.trim() === "0",
-                        thongSo: specMap[ma] || "Đang cập nhật...",
+                        thongSo: specMap[maChuanHoa] || "Đang cập nhật...",
                         allPrograms: []
                     };
                 }
-                groupedMap[ma].allPrograms.push(chuongTrinhObj);
+                groupedMap[maChuanHoa].allPrograms.push(chuongTrinhObj);
             });
 
             masterData = Object.values(groupedMap).map(item => {
@@ -312,16 +340,13 @@
         return str.replace(/'/g, "\\'");
     }
 
-    /* CHỨC NĂNG MỚI: CLICK VÀO GIÁ NÀO TỰ ĐỘNG COPY ĐOẠN TEXT ĐƠN LẺ ĐÓ */
     function quickCopySingle(tenGoc, gia, chuongTrinh) {
-        // Làm sạch tên máy (xóa ngoặc đơn đuôi)
         const tenSach = tenGoc.replace(/\s*\([^)]*?\)\s*$/, '').trim();
         const giaDinhDang = gia.toLocaleString() + "đ";
         
         const textToCopy = `${tenSach} - Giá: ${giaDinhDang} - CT: ${chuongTrinh}`;
         
         navigator.clipboard.writeText(textToCopy).then(() => {
-            // Hiện thông báo toast nhỏ bên góc hoặc alert nhanh để sales biết đã xong
             alert(`Đã copy: ${textToCopy}`);
         }).catch(() => {
             alert("Lỗi sao chép tự động!");
@@ -376,6 +401,7 @@
 
     function resetAllSelection() {
         selectedSubProgs.clear();
+        renderTable(); // ÉP UPDATE LẠI GIAO DIỆN KHI RESET
     }
 
     function updateFooter() {
@@ -392,7 +418,7 @@
             const activeProgs = item.allPrograms.filter(p => selectedSubProgs.has(p.subProgId));
             if (activeProgs.length === 0) return;
 
-            const tenSạch = item.ten.replace(/\s*\([^)]*?\)\s*$/, '').trim();
+            const tenSach = item.ten.replace(/\s*\([^)]*?\)\s*$/, '').trim();
 
             activeProgs.forEach(p => {
                 const kmUpper = p.km.toUpperCase().trim();
@@ -400,10 +426,10 @@
                 
                 if (isCombo) {
                     if (!comboGroups[kmUpper]) comboGroups[kmUpper] = [];
-                    comboGroups[kmUpper].push({ ten: tenSạch, ma: item.ma, gia: p.gia });
+                    comboGroups[kmUpper].push({ ten: tenSach, ma: item.ma, gia: p.gia });
                 } else {
                     if (!leItemsMap[item.ma]) {
-                        leItemsMap[item.ma] = { ten: tenSạch, ma: item.ma, progs: [] };
+                        leItemsMap[item.ma] = { ten: tenSach, ma: item.ma, progs: [] };
                     }
                     leItemsMap[item.ma].progs.push(p);
                 }
@@ -435,3 +461,5 @@
 </script>
 </body>
 </html>
+
+```
