@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V16.4 - Personal Pro</title>
+    <title>Bravo Sync V16.5 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -28,6 +28,15 @@
         .btn-clear-search { position: absolute; right: 10px; cursor: pointer; color: #70757a; font-weight: bold; font-size: 16px; display: none; user-select: none; }
         .btn-clear-search:hover { color: var(--danger); }
 
+        /* BỘ LỌC NHANH (QUICK FILTER CHIPS) */
+        .filter-chips-container { display: flex; gap: 6px; overflow-x: auto; padding: 6px 0 2px 0; width: 100%; scrollbar-width: none; }
+        .filter-chips-container::-webkit-scrollbar { display: none; }
+        .chip { padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; background: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; transition: all 0.2s; user-select: none; }
+        .chip:hover { background: #e8f0fe; color: var(--primary); }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .chip.chip-badge { background: #fef7e0; color: #b06000; border-color: #fce8e6; }
+        .chip.chip-badge.active { background: var(--warning); color: #000; }
+
         button { padding: 8px 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; font-size: 11px; }
         .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
         .btn-select-all.active { background: var(--danger); color: white; border-color: var(--danger); }
@@ -39,7 +48,6 @@
         .selected-row { background: #e8f0fe !important; }
         .specs-text { font-size: 11px; color: #5f6368; margin-top: 4px; font-style: italic; display: block; line-height: 1.3; }
         
-        /* CSS CHO NÚT TRA CỨU & SỬA SPECS */
         .specs-tools { margin-top: 4px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
         .btn-search-specs { display: inline-block; padding: 2px 6px; background: #e8f0fe; color: var(--primary); font-size: 10px; border-radius: 4px; border: 1px solid #c2e7ff; font-weight: bold; text-decoration: none; }
         .btn-search-specs:hover { background: var(--primary); color: white; }
@@ -94,7 +102,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V16.4</div>
+<div class="header">VIỆT TUẤN SALES PRO - V16.5</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -107,6 +115,22 @@
         <button onclick="toggleZeroStock()" id="btnStockToggle" style="background:#424242">HIỆN TỒN > 0</button>
         <button onclick="copyZaloByProgram()" style="background:var(--purple)">GỬI ZALO</button>
         <button onclick="loadData()" style="background:var(--success)">MỚI</button>
+
+        <!-- THANH LỌC NHANH (QUICK FILTERS) -->
+        <div class="filter-chips-container">
+            <div class="chip active" onclick="setQuickFilter('', this)">Tất cả</div>
+            <div class="chip chip-badge" onclick="setQuickFilter('GIẢM SÂU', this)">📉 Giảm sâu</div>
+            <div class="chip chip-badge" onclick="setQuickFilter('CT MỚI', this)">🆕 CT Mới</div>
+            <div class="chip" onclick="setQuickFilter('Panasonic', this)">Panasonic</div>
+            <div class="chip" onclick="setQuickFilter('Daikin', this)">Daikin</div>
+            <div class="chip" onclick="setQuickFilter('Casper', this)">Casper</div>
+            <div class="chip" onclick="setQuickFilter('Funiki', this)">Funiki</div>
+            <div class="chip" onclick="setQuickFilter('LG', this)">LG</div>
+            <div class="chip" onclick="setQuickFilter('Samsung', this)">Samsung</div>
+            <div class="chip" onclick="setQuickFilter('Toshiba', this)">Toshiba</div>
+            <div class="chip" onclick="setQuickFilter('Sharp', this)">Sharp</div>
+            <div class="chip" onclick="setQuickFilter('Midea', this)">Midea</div>
+        </div>
     </div>
 
     <div class="table-res">
@@ -136,8 +160,8 @@
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = [], filteredData = [], selectedSubProgs = new Set(), openSubRows = new Set(), showZeroStock = false;
+    let activeQuickFilter = ""; // Biến lưu từ khóa lọc nhanh
     
-    // Đọc cache thông số do Sales tự cập nhật thủ công
     let localSpecsCache = JSON.parse(localStorage.getItem('CUSTOM_SPECS_CACHE') || '{}');
 
     window.onload = () => { loadData(); updateWeather(); };
@@ -153,6 +177,20 @@
         box.value = '';
         document.getElementById('btnClearSearch').style.display = 'none';
         box.focus();
+        filterTable();
+    }
+
+    /* --- XỬ LÝ CLICK FILTER CHIP --- */
+    function setQuickFilter(keyword, el) {
+        document.querySelectorAll('.filter-chips-container .chip').forEach(c => c.classList.remove('active'));
+        
+        if (activeQuickFilter === keyword && keyword !== "") {
+            activeQuickFilter = "";
+            document.querySelector('.filter-chips-container .chip').classList.add('active'); // Bật lại chip "Tất cả"
+        } else {
+            activeQuickFilter = keyword;
+            el.classList.add('active');
+        }
         filterTable();
     }
 
@@ -289,9 +327,18 @@
 
     function filterTable() {
         const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(k => k);
+        const qf = activeQuickFilter.toLowerCase();
+
         filteredData = masterData.filter(i => {
-            const target = (i.ten + i.ma + i.thongSo + i.kmDaiDien).toLowerCase();
-            return words.every(k => target.includes(k)) && (showZeroStock ? true : !i.isZero);
+            const target = (i.ten + i.ma + i.thongSo + i.kmDaiDien + i.danhGiaDaiDien.label).toLowerCase();
+            
+            // Khớp ô tìm kiếm
+            const matchesSearch = words.every(k => target.includes(k));
+            
+            // Khớp bộ lọc nhanh Quick Filter
+            const matchesQuickFilter = qf === "" ? true : target.includes(qf);
+
+            return matchesSearch && matchesQuickFilter && (showZeroStock ? true : !i.isZero);
         });
         renderTable();
     }
