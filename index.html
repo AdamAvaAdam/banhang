@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V16.3 - Personal Pro</title>
+    <title>Bravo Sync V16.4 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -23,7 +23,6 @@
         .container { padding: 8px; max-width: 1400px; margin: auto; }
         .action-bar { background: white; padding: 8px; border-radius: 0 0 10px 10px; border: 1px solid var(--border); border-top: none; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; position: sticky; top: 83px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        /* BỔ SUNG CSS CHO NÚT X XÓA TÌM KIẾM */
         .search-wrapper { flex: 2; min-width: 180px; position: relative; display: flex; align-items: center; }
         #searchBox { width: 100%; padding: 10px 32px 10px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box; }
         .btn-clear-search { position: absolute; right: 10px; cursor: pointer; color: #70757a; font-weight: bold; font-size: 16px; display: none; user-select: none; }
@@ -41,9 +40,11 @@
         .specs-text { font-size: 11px; color: #5f6368; margin-top: 4px; font-style: italic; display: block; line-height: 1.3; }
         
         /* CSS CHO NÚT TRA CỨU & SỬA SPECS */
-        .btn-search-specs { display: inline-block; padding: 2px 6px; background: #e8f0fe; color: var(--primary); font-size: 10px; border-radius: 4px; border: 1px solid #c2e7ff; font-weight: bold; margin-top: 4px; text-decoration: none; }
+        .specs-tools { margin-top: 4px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .btn-search-specs { display: inline-block; padding: 2px 6px; background: #e8f0fe; color: var(--primary); font-size: 10px; border-radius: 4px; border: 1px solid #c2e7ff; font-weight: bold; text-decoration: none; }
         .btn-search-specs:hover { background: var(--primary); color: white; }
-        .btn-edit-specs { display: inline-block; padding: 2px 6px; background: #fef7e0; color: #b06000; font-size: 10px; border-radius: 4px; border: 1px solid #fce8e6; font-weight: bold; margin-top: 4px; margin-left: 4px; }
+        .btn-edit-specs { display: inline-block; padding: 2px 6px; background: #fef7e0; color: #b06000; font-size: 10px; border-radius: 4px; border: 1px solid #fce8e6; font-weight: bold; cursor: pointer; }
+        .btn-edit-specs:hover { background: #fbbc04; color: white; }
 
         .btn-expand { background: #e8f0fe; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-top: 4px; font-weight: bold; border: 1px solid #c2e7ff; }
         .sub-row { background: #fafafa; display: none; }
@@ -93,12 +94,11 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V16.3</div>
+<div class="header">VIỆT TUẤN SALES PRO - V16.4</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
     <div class="action-bar">
-        <!-- TỐI ƯU Ô TÌM KIẾM CÓ NÚT XÓA NHANH -->
         <div class="search-wrapper">
             <input type="text" id="searchBox" placeholder="Panasonic, 10kg, Inverter..." onkeyup="handleSearchInput()">
             <span id="btnClearSearch" class="btn-clear-search" onclick="clearSearch()">✕</span>
@@ -142,7 +142,6 @@
 
     window.onload = () => { loadData(); updateWeather(); };
 
-    /* --- XỬ LÝ NÚT XÓA TÌM KIẾM --- */
     function handleSearchInput() {
         const val = document.getElementById('searchBox').value;
         document.getElementById('btnClearSearch').style.display = val.length > 0 ? 'block' : 'none';
@@ -157,15 +156,13 @@
         filterTable();
     }
 
-    /* --- XỬ LÝ LƯU & SỬA SPECS THỦ CÔNG --- */
     function editCustomSpecs(maChuanHoa) {
-        const currentSpec = localSpecsCache[maChuanHoa] || "";
-        const newSpec = prompt("Nhập thông số kỹ thuật cho mã [" + maChuanHoa + "]:", currentSpec);
+        const currentSpec = localSpecsCache[maChuanHoa] || masterData.find(i => i.maChuanHoa === maChuanHoa)?.thongSo || "";
+        const newSpec = prompt("Nhập/Sửa thông số kỹ thuật cho mã [" + maChuanHoa + "]:", currentSpec);
         if (newSpec !== null && newSpec.trim() !== "") {
             localSpecsCache[maChuanHoa] = newSpec.trim();
             localStorage.setItem('CUSTOM_SPECS_CACHE', JSON.stringify(localSpecsCache));
             
-            // Cập nhật lại trong masterData
             const item = masterData.find(i => i.maChuanHoa === maChuanHoa);
             if (item) item.thongSo = newSpec.trim();
             
@@ -258,8 +255,7 @@
                 const chuongTrinhObj = { subProgId: globalProgId, gia, km: kmText, ngay: ngayHL, danhGia, isBest: false };
 
                 if (!groupedMap[maChuanHoa]) {
-                    // Ưu tiên lấy specs từ Cache lưu tay -> đến Sheet Specs -> Mặc định
-                    const finalSpecs = localSpecsCache[maChuanHoa] || specMap[maChuanHoa] || null;
+                    const finalSpecs = localSpecsCache[maChuanHoa] || specMap[maChuanHoa] || "Đang cập nhật...";
 
                     groupedMap[maChuanHoa] = {
                         id: idx, ma: gốcMa, maChuanHoa: maChuanHoa, ton,
@@ -294,8 +290,7 @@
     function filterTable() {
         const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(k => k);
         filteredData = masterData.filter(i => {
-            const specsStr = i.thongSo || "";
-            const target = (i.ten + i.ma + specsStr + i.kmDaiDien).toLowerCase();
+            const target = (i.ten + i.ma + i.thongSo + i.kmDaiDien).toLowerCase();
             return words.every(k => target.includes(k)) && (showZeroStock ? true : !i.isZero);
         });
         renderTable();
@@ -311,19 +306,7 @@
             const isSubOpen = openSubRows.has(i.id);
             const isRowSelected = i.allPrograms.some(p => selectedSubProgs.has(p.subProgId));
             
-            // Render block Thông số hoặc Nút Tra cứu thông số
-            let specsHtml = "";
-            if (i.thongSo) {
-                specsHtml = `<span class="specs-text">${i.thongSo}</span>`;
-            } else {
-                const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(i.ten + " " + i.ma + " thông số kỹ thuật")}`;
-                specsHtml = `
-                    <div style="margin-top:4px;">
-                        <a href="${searchUrl}" target="_blank" class="btn-search-specs" onclick="event.stopPropagation();">🔍 Tìm Specs Google</a>
-                        <span class="btn-edit-specs" onclick="event.stopPropagation(); editCustomSpecs('${i.maChuanHoa}')">✏️ Nạp Specs</span>
-                    </div>
-                `;
-            }
+            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(i.ten + " " + i.ma + " thông số kỹ thuật")}`;
 
             html += `
                 <tr class="${isRowSelected ? 'selected-row' : ''}" onclick="toggleMainRow(event, ${i.id})">
@@ -332,7 +315,11 @@
                     </td>
                     <td>
                         <b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small>
-                        ${specsHtml}
+                        <span class="specs-text">${i.thongSo}</span>
+                        <div class="specs-tools">
+                            <a href="${searchUrl}" target="_blank" class="btn-search-specs" onclick="event.stopPropagation();">🔍 Tìm Specs Google</a>
+                            <span class="btn-edit-specs" onclick="event.stopPropagation(); editCustomSpecs('${i.maChuanHoa}')">✏️ Nạp Specs</span>
+                        </div>
                         ${hasSub ? `<div class="btn-expand" onclick="event.stopPropagation(); toggleSubRow(${i.id})">${isSubOpen ? '🔼 ẨN CHƯƠNG TRÌNH PHỤ' : `🔽 XEM & CHỌN CẤP GIÁ CHI TIẾT (${i.allPrograms.length})`}</div>` : ''}
                     </td>
                     <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
