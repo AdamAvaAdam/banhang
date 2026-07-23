@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V16.2 - Personal Pro</title>
+    <title>Bravo Sync V16.3 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -22,9 +22,13 @@
 
         .container { padding: 8px; max-width: 1400px; margin: auto; }
         .action-bar { background: white; padding: 8px; border-radius: 0 0 10px 10px; border: 1px solid var(--border); border-top: none; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; position: sticky; top: 83px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .search-wrapper { flex: 2; min-width: 180px; }
-        #searchBox { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
         
+        /* BỔ SUNG CSS CHO NÚT X XÓA TÌM KIẾM */
+        .search-wrapper { flex: 2; min-width: 180px; position: relative; display: flex; align-items: center; }
+        #searchBox { width: 100%; padding: 10px 32px 10px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box; }
+        .btn-clear-search { position: absolute; right: 10px; cursor: pointer; color: #70757a; font-weight: bold; font-size: 16px; display: none; user-select: none; }
+        .btn-clear-search:hover { color: var(--danger); }
+
         button { padding: 8px 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: white; background: #5f6368; font-size: 11px; }
         .btn-select-all { background: #f1f3f4; color: #3c4043; border: 1px solid var(--border); }
         .btn-select-all.active { background: var(--danger); color: white; border-color: var(--danger); }
@@ -36,6 +40,11 @@
         .selected-row { background: #e8f0fe !important; }
         .specs-text { font-size: 11px; color: #5f6368; margin-top: 4px; font-style: italic; display: block; line-height: 1.3; }
         
+        /* CSS CHO NÚT TRA CỨU & SỬA SPECS */
+        .btn-search-specs { display: inline-block; padding: 2px 6px; background: #e8f0fe; color: var(--primary); font-size: 10px; border-radius: 4px; border: 1px solid #c2e7ff; font-weight: bold; margin-top: 4px; text-decoration: none; }
+        .btn-search-specs:hover { background: var(--primary); color: white; }
+        .btn-edit-specs { display: inline-block; padding: 2px 6px; background: #fef7e0; color: #b06000; font-size: 10px; border-radius: 4px; border: 1px solid #fce8e6; font-weight: bold; margin-top: 4px; margin-left: 4px; }
+
         .btn-expand { background: #e8f0fe; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-top: 4px; font-weight: bold; border: 1px solid #c2e7ff; }
         .sub-row { background: #fafafa; display: none; }
         .sub-row.open { display: table-row; }
@@ -84,12 +93,16 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V16.2</div>
+<div class="header">VIỆT TUẤN SALES PRO - V16.3</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
     <div class="action-bar">
-        <div class="search-wrapper"><input type="text" id="searchBox" placeholder="Panasonic, 10kg, Inverter..." onkeyup="filterTable()"></div>
+        <!-- TỐI ƯU Ô TÌM KIẾM CÓ NÚT XÓA NHANH -->
+        <div class="search-wrapper">
+            <input type="text" id="searchBox" placeholder="Panasonic, 10kg, Inverter..." onkeyup="handleSearchInput()">
+            <span id="btnClearSearch" class="btn-clear-search" onclick="clearSearch()">✕</span>
+        </div>
         <button id="btnSelectAll" class="btn-select-all" onclick="handleToggleAll()">CHỌN TẤT CẢ</button>
         <button onclick="toggleZeroStock()" id="btnStockToggle" style="background:#424242">HIỆN TỒN > 0</button>
         <button onclick="copyZaloByProgram()" style="background:var(--purple)">GỬI ZALO</button>
@@ -123,8 +136,42 @@
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = [], filteredData = [], selectedSubProgs = new Set(), openSubRows = new Set(), showZeroStock = false;
+    
+    // Đọc cache thông số do Sales tự cập nhật thủ công
+    let localSpecsCache = JSON.parse(localStorage.getItem('CUSTOM_SPECS_CACHE') || '{}');
 
     window.onload = () => { loadData(); updateWeather(); };
+
+    /* --- XỬ LÝ NÚT XÓA TÌM KIẾM --- */
+    function handleSearchInput() {
+        const val = document.getElementById('searchBox').value;
+        document.getElementById('btnClearSearch').style.display = val.length > 0 ? 'block' : 'none';
+        filterTable();
+    }
+
+    function clearSearch() {
+        const box = document.getElementById('searchBox');
+        box.value = '';
+        document.getElementById('btnClearSearch').style.display = 'none';
+        box.focus();
+        filterTable();
+    }
+
+    /* --- XỬ LÝ LƯU & SỬA SPECS THỦ CÔNG --- */
+    function editCustomSpecs(maChuanHoa) {
+        const currentSpec = localSpecsCache[maChuanHoa] || "";
+        const newSpec = prompt("Nhập thông số kỹ thuật cho mã [" + maChuanHoa + "]:", currentSpec);
+        if (newSpec !== null && newSpec.trim() !== "") {
+            localSpecsCache[maChuanHoa] = newSpec.trim();
+            localStorage.setItem('CUSTOM_SPECS_CACHE', JSON.stringify(localSpecsCache));
+            
+            // Cập nhật lại trong masterData
+            const item = masterData.find(i => i.maChuanHoa === maChuanHoa);
+            if (item) item.thongSo = newSpec.trim();
+            
+            filterTable();
+        }
+    }
 
     function getWeatherIcon(code) {
         if (code <= 3) return "☀️";
@@ -173,7 +220,6 @@
                 fetch(URL_STOCK).then(r => r.text()), fetch(URL_PRICE).then(r => r.text()), fetch(URL_SPECS).then(r => r.text())
             ]);
             
-            // ÉP KIỂU VÀ CHUẨN HÓA UNICODE CHO BẢNG THÔNG SỐ & BẢNG TỒN
             const stockMap = Object.fromEntries(parseCSV(csvStock).map(c => [
                 c[0] ? c[0].toString().trim().toUpperCase().normalize() : "", 
                 c[3]
@@ -194,7 +240,6 @@
                 const gốcMa = cols[0]?.trim(); 
                 if (!gốcMa) return;
                 
-                // Ép chuẩn hóa mã từ bảng giá trước khi tra cứu
                 const maChuanHoa = gốcMa.toString().trim().toUpperCase().normalize();
                 const gia = parseInt(cols[5]?.replace(/[^0-9]/g, '')) || 0;
                 if (gia <= 0) return;
@@ -213,11 +258,14 @@
                 const chuongTrinhObj = { subProgId: globalProgId, gia, km: kmText, ngay: ngayHL, danhGia, isBest: false };
 
                 if (!groupedMap[maChuanHoa]) {
+                    // Ưu tiên lấy specs từ Cache lưu tay -> đến Sheet Specs -> Mặc định
+                    const finalSpecs = localSpecsCache[maChuanHoa] || specMap[maChuanHoa] || null;
+
                     groupedMap[maChuanHoa] = {
-                        id: idx, ma: gốcMa, ton,
+                        id: idx, ma: gốcMa, maChuanHoa: maChuanHoa, ton,
                         ten: cols[1]?.replace(/^"|"$/g, ''),
                         isZero: ton.trim() === "0",
-                        thongSo: specMap[maChuanHoa] || "Đang cập nhật...",
+                        thongSo: finalSpecs,
                         allPrograms: []
                     };
                 }
@@ -246,7 +294,8 @@
     function filterTable() {
         const words = document.getElementById('searchBox').value.toLowerCase().split(" ").filter(k => k);
         filteredData = masterData.filter(i => {
-            const target = (i.ten + i.ma + i.thongSo + i.kmDaiDien).toLowerCase();
+            const specsStr = i.thongSo || "";
+            const target = (i.ten + i.ma + specsStr + i.kmDaiDien).toLowerCase();
             return words.every(k => target.includes(k)) && (showZeroStock ? true : !i.isZero);
         });
         renderTable();
@@ -262,13 +311,28 @@
             const isSubOpen = openSubRows.has(i.id);
             const isRowSelected = i.allPrograms.some(p => selectedSubProgs.has(p.subProgId));
             
+            // Render block Thông số hoặc Nút Tra cứu thông số
+            let specsHtml = "";
+            if (i.thongSo) {
+                specsHtml = `<span class="specs-text">${i.thongSo}</span>`;
+            } else {
+                const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(i.ten + " " + i.ma + " thông số kỹ thuật")}`;
+                specsHtml = `
+                    <div style="margin-top:4px;">
+                        <a href="${searchUrl}" target="_blank" class="btn-search-specs" onclick="event.stopPropagation();">🔍 Tìm Specs Google</a>
+                        <span class="btn-edit-specs" onclick="event.stopPropagation(); editCustomSpecs('${i.maChuanHoa}')">✏️ Nạp Specs</span>
+                    </div>
+                `;
+            }
+
             html += `
                 <tr class="${isRowSelected ? 'selected-row' : ''}" onclick="toggleMainRow(event, ${i.id})">
                     <td style="text-align:center" onclick="event.stopPropagation(); handleCheckboxMain(${i.id});">
                         <input type="checkbox" ${isRowSelected ? 'checked' : ''}>
                     </td>
                     <td>
-                        <b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small><span class="specs-text">${i.thongSo}</span>
+                        <b>${i.ten}</b><br><small style="color:#888;">${i.ma}</small>
+                        ${specsHtml}
                         ${hasSub ? `<div class="btn-expand" onclick="event.stopPropagation(); toggleSubRow(${i.id})">${isSubOpen ? '🔼 ẨN CHƯƠNG TRÌNH PHỤ' : `🔽 XEM & CHỌN CẤP GIÁ CHI TIẾT (${i.allPrograms.length})`}</div>` : ''}
                     </td>
                     <td style="text-align:center; font-weight:bold; color:${i.isZero?'#ccc':'var(--primary)'}">${i.ton}</td>
@@ -320,25 +384,20 @@
         updateFooter();
     }
 
-    function escapeQuote(str) {
-        return str.replace(/'/g, "\\'");
-    }
+    function escapeQuote(str) { return str.replace(/'/g, "\\'"); }
 
     function quickCopySingle(tenGoc, gia, chuongTrinh) {
         const tenSach = tenGoc.replace(/\s*\([^)]*?\)\s*$/, '').trim();
         const giaDinhDang = gia.toLocaleString() + "đ";
-        
         const textToCopy = `${tenSach} - Giá: ${giaDinhDang} - CT: ${chuongTrinh}`;
         
         navigator.clipboard.writeText(textToCopy).then(() => {
             alert(`Đã copy: ${textToCopy}`);
-        }).catch(() => {
-            alert("Lỗi sao chép tự động!");
-        });
+        }).catch(() => { alert("Lỗi sao chép tự động!"); });
     }
 
     function toggleMainRow(event, id) {
-        if (event.target.tagName === 'INPUT' || event.target.classList.contains('btn-expand') || event.target.classList.contains('btn-quick-copy')) return;
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'A' || event.target.classList.contains('btn-expand') || event.target.classList.contains('btn-quick-copy') || event.target.classList.contains('btn-edit-specs')) return;
         handleCheckboxMain(id);
     }
 
@@ -385,7 +444,7 @@
 
     function resetAllSelection() {
         selectedSubProgs.clear();
-        renderTable(); // ÉP UPDATE LẠI GIAO DIỆN KHI RESET
+        renderTable();
     }
 
     function updateFooter() {
@@ -445,5 +504,3 @@
 </script>
 </body>
 </html>
-
-```
