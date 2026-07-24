@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bravo Sync V16.5 - Personal Pro</title>
+    <title>Bravo Sync V16.6 - Personal Pro</title>
     <style>
         :root {
             --primary: #1a73e8; --primary-dark: #1557b0; --danger: #d93025; --success: #1e8e3e;
@@ -102,7 +102,7 @@
 </head>
 <body>
 
-<div class="header">VIỆT TUẤN SALES PRO - V16.5</div>
+<div class="header">VIỆT TUẤN SALES PRO - V16.6</div>
 <div class="weather-bar" id="weatherBar">⏳ Đang đồng bộ thời tiết HN & HY...</div>
 
 <div class="container">
@@ -116,20 +116,19 @@
         <button onclick="copyZaloByProgram()" style="background:var(--purple)">GỬI ZALO</button>
         <button onclick="loadData()" style="background:var(--success)">MỚI</button>
 
-        <!-- THANH LỌC NHANH (QUICK FILTERS) -->
+        <!-- THANH LỌC NHANH - CẬP NHẬT ĐÚNG CÁC HÃNG THỰC TẾ -->
         <div class="filter-chips-container">
             <div class="chip active" onclick="setQuickFilter('', this)">Tất cả</div>
             <div class="chip chip-badge" onclick="setQuickFilter('GIẢM SÂU', this)">📉 Giảm sâu</div>
             <div class="chip chip-badge" onclick="setQuickFilter('CT MỚI', this)">🆕 CT Mới</div>
             <div class="chip" onclick="setQuickFilter('Panasonic', this)">Panasonic</div>
             <div class="chip" onclick="setQuickFilter('Daikin', this)">Daikin</div>
-            <div class="chip" onclick="setQuickFilter('Casper', this)">Casper</div>
-            <div class="chip" onclick="setQuickFilter('Funiki', this)">Funiki</div>
-            <div class="chip" onclick="setQuickFilter('LG', this)">LG</div>
-            <div class="chip" onclick="setQuickFilter('Samsung', this)">Samsung</div>
             <div class="chip" onclick="setQuickFilter('Toshiba', this)">Toshiba</div>
             <div class="chip" onclick="setQuickFilter('Sharp', this)">Sharp</div>
-            <div class="chip" onclick="setQuickFilter('Midea', this)">Midea</div>
+            <div class="chip" onclick="setQuickFilter('Electrolux', this)">Electrolux</div>
+            <div class="chip" onclick="setQuickFilter('Hitachi', this)">Hitachi</div>
+            <div class="chip" onclick="setQuickFilter('Aufit', this)">Aufit</div>
+            <div class="chip" onclick="setQuickFilter('Sanaky', this)">Sanaky</div>
         </div>
     </div>
 
@@ -160,7 +159,7 @@
     const URL_SPECS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1k5jVGEaXBRv9EOrUqSiTDJ7IrwWHIsTl3KrnYWArTrpZ17gLORwN06RqLUI6Y7My_Xs6OL6Es1Bl/pub?gid=1649169229&single=true&output=csv";
 
     let masterData = [], filteredData = [], selectedSubProgs = new Set(), openSubRows = new Set(), showZeroStock = false;
-    let activeQuickFilter = ""; // Biến lưu từ khóa lọc nhanh
+    let activeQuickFilter = ""; 
     
     let localSpecsCache = JSON.parse(localStorage.getItem('CUSTOM_SPECS_CACHE') || '{}');
 
@@ -180,13 +179,12 @@
         filterTable();
     }
 
-    /* --- XỬ LÝ CLICK FILTER CHIP --- */
     function setQuickFilter(keyword, el) {
         document.querySelectorAll('.filter-chips-container .chip').forEach(c => c.classList.remove('active'));
         
         if (activeQuickFilter === keyword && keyword !== "") {
             activeQuickFilter = "";
-            document.querySelector('.filter-chips-container .chip').classList.add('active'); // Bật lại chip "Tất cả"
+            document.querySelector('.filter-chips-container .chip').classList.add('active'); 
         } else {
             activeQuickFilter = keyword;
             el.classList.add('active');
@@ -332,10 +330,7 @@
         filteredData = masterData.filter(i => {
             const target = (i.ten + i.ma + i.thongSo + i.kmDaiDien + i.danhGiaDaiDien.label).toLowerCase();
             
-            // Khớp ô tìm kiếm
             const matchesSearch = words.every(k => target.includes(k));
-            
-            // Khớp bộ lọc nhanh Quick Filter
             const matchesQuickFilter = qf === "" ? true : target.includes(qf);
 
             return matchesSearch && matchesQuickFilter && (showZeroStock ? true : !i.isZero);
